@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Track Record — Artvion Football Tips{% endblock %}
+{% block content %}
+  <h1>The real track record</h1>
+  <p class="lede">Every prediction we publish is logged before we know the result, and graded against the real
+    final score. This page updates from the same numbers — nothing here is cherry-picked.</p>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="val">{{ overall.total }}</div><div class="label">Predictions logged</div></div>
+    <div class="stat-card"><div class="val">{{ overall.resolved }}</div><div class="label">Resolved</div></div>
+    <div class="stat-card"><div class="val">{{ overall.win_rate_str }}</div><div class="label">Win rate</div></div>
+    <div class="stat-card"><div class="val">{{ overall.pending }}</div><div class="label">Pending</div></div>
+  </div>
+
+  {% if overall.resolved < 50 %}
+    <div class="disclaimer-box">
+      Only {{ overall.resolved }} resolved predictions so far — too small a sample to draw real conclusions from yet.
+      Treat this as an early trend, not a verdict, until it grows.
+    </div>
+  {% endif %}
+
+  <h2>By market</h2>
+  <div class="card" style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+      <thead><tr style="color:var(--muted);text-align:left;">
+        <th style="padding:0.4rem 0.6rem;">Market</th><th style="padding:0.4rem 0.6rem;">Picks</th>
+        <th style="padding:0.4rem 0.6rem;">Won</th><th style="padding:0.4rem 0.6rem;">Lost</th>
+        <th style="padding:0.4rem 0.6rem;">Win %</th>
+      </tr></thead>
+      <tbody>
+      {% for m in by_market %}
+        <tr style="border-top:1px solid var(--border);">
+          <td style="padding:0.4rem 0.6rem;">{{ m.market }}</td>
+          <td style="padding:0.4rem 0.6rem;">{{ m.total }}</td>
+          <td style="padding:0.4rem 0.6rem;color:var(--green);">{{ m.won }}</td>
+          <td style="padding:0.4rem 0.6rem;color:var(--red);">{{ m.lost }}</td>
+          <td style="padding:0.4rem 0.6rem;">{{ m.win_rate_str }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" style="padding:1rem 0.6rem;color:var(--muted);">No predictions published yet — check back once the first scan goes live.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

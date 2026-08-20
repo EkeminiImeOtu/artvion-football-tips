@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sign up — Artvion Football Tips{% endblock %}
+{% block content %}
+  <div class="narrow">
+    <h1>Create your account</h1>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <form class="stack" method="post" action="/signup">
+      <input type="hidden" name="next" value="{{ next }}">
+      <div>
+        <label>Email</label>
+        <input type="email" name="email" required autofocus>
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" name="password" minlength="8" required>
+      </div>
+      <button type="submit" class="btn">Create account</button>
+    </form>
+    <p style="margin-top:1rem;color:var(--muted);font-size:0.9rem;">
+      Already have an account? <a href="/login">Log in</a>
+    </p>
+  </div>
+{% endblock %}

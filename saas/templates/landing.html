@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Artvion Football Tips — Probability Analytics{% endblock %}
+{% block content %}
+  <h1>Football predictions with a real, published track record.</h1>
+  <p class="lede">
+    Live scores, football news, and a calibrated probability model — backtested against 5 seasons
+    of real results across 21 leagues, and honest about what it does and doesn't know. No ads.
+  </p>
+  <a href="/predictions" class="btn">See today's predictions</a>
+  <a href="/track-record" class="btn-secondary" style="margin-left:0.7rem;">See the real accuracy record</a>
+
+  <div class="teaser-row">
+    <div class="teaser-card">
+      <h3>⚽ Live Scores <a href="/live-scores">See all →</a></h3>
+      {% if fixtures %}
+        {% for f in fixtures %}
+          <div class="teaser-mini-score">
+            <span>{{ f.home_name }} vs {{ f.away_name }}</span>
+            <span>
+              {% if f.is_live or f.is_final %}{{ f.home_score }}-{{ f.away_score }}{% else %}{{ f.detail }}{% endif %}
+            </span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--muted);font-size:0.85rem;">No fixtures right now.</p>
+      {% endif %}
+    </div>
+
+    <div class="teaser-card">
+      <h3>📰 Latest News <a href="/news">See all →</a></h3>
+      {% if news %}
+        {% for n in news %}
+          <a class="teaser-mini-news" href="{{ n.link }}" target="_blank" rel="noopener">
+            {% if n.image %}<img class="teaser-news-thumb" src="{{ n.image }}" alt="" loading="lazy">{% endif %}
+            <span>{{ n.title }}</span>
+          </a>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--muted);font-size:0.85rem;">Couldn't load news right now.</p>
+      {% endif %}
+    </div>
+
+    <div class="teaser-card">
+      <h3>🎯 Today's Top Picks <a href="/predictions">See all →</a></h3>
+      {% if picks %}
+        {% for p in picks %}
+          <div class="teaser-mini-score">
+            <span>{{ p.display }}</span>
+            <span class="conf-pill conf-{{ p.confidence }}">{{ p.confidence }}</span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:var(--muted);font-size:0.85rem;">No predictions published yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="disclaimer-box">
+    ⚠️ This is a probability and analytics tool, not a promise of profit. Our own backtesting shows
+    the model does not reliably beat bookmaker closing odds — see the <a href="/track-record">track record</a>
+    for the real numbers, good or bad. If you choose to bet, that decision and any resulting outcome is yours alone.
+  </div>
+{% endblock %}

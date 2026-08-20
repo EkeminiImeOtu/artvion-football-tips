@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SportyBet Football Scout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070d1a;
+      --surface: #0c1526;
+      --card: #0f1d33;
+      --border: #1a2e4a;
+      --green: #00e676;
+      --green2: #00bfa5;
+      --red: #ff5252;
+      --yellow: #ffd740;
+      --orange: #ff9100;
+      --blue: #448aff;
+      --text: #e3eeff;
+      --muted: #5a7a9f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: rgba(12, 21, 38, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      text-shadow: 0 0 20px rgba(0, 230, 118, 0.3);
+    }
+
+    .title-group h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.5px;
+    }
+
+    .title-group p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .api-key-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.3rem;
+    }
+
+    .api-key-group input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      width: 250px;
+      font-size: 0.9rem;
+    }
+    
+    .api-key-group input:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+
+    .api-key-group a {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .api-key-group a:hover {
+      color: var(--green);
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .control-group input[type="date"],
+    .control-group select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    .markets-filter {
+      grid-column: 1 / -1;
+    }
+    
+    .markets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--green);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .btn-scan {
+      background: linear-gradient(135deg, var(--green2), var(--green));
+      color: #000;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      align-self: flex-end;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-scan:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+    }
+    
+    .btn-scan:disabled {
+      background: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--muted);
+    }
+
+    .stat-card.active::before {
+      background: var(--green);
+    }
+    
+    .stat-card.picks::before {
+      background: var(--blue);
+    }
+    
+    .stat-card.high::before {
+      background: var(--yellow);
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .status-text {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: var(--muted);
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    
+    .dot.scanning {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.5); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .btn-export {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: none;
+    }
+    
+    .btn-export:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .admin-publish {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+    }
+    .admin-publish summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 600;
+      user-select: none;
+    }
+    .admin-publish-body {
+      margin-top: 0.8rem;
+    }
+    .admin-publish-note {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 0.6rem;
+    }
+    .admin-publish-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .admin-publish-row input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      text-align: center;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      gap: 1rem;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .empty-title {
+      font-size: 1.5rem;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+
+    .match-card.rejected {
+      opacity: 0.65;
+      border: 1px dashed var(--border);
+    }
+    .rejections-details {
+      display: none;
+      margin-top: 1rem;
+      background: rgba(255, 82, 82, 0.05);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 82, 82, 0.3);
+    }
+    .rejections-details.open {
+      display: block;
+    }
+    .rejections-details ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rejections-details li {
+      position: relative;
+      padding-left: 1.2rem;
+      color: #ff8a80;
+    }
+    .rejections-details li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--red);
+    }
+
+    /* Track Record */
+    .view-toggle {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    .view-tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .view-tab-btn.active {
+      background: var(--card);
+      color: var(--text);
+      border-color: var(--green2);
+    }
+    .tr-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .tr-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+      max-width: 60ch;
+    }
+    .tr-note code {
+      background: var(--surface);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: var(--text);
+    }
+    .tr-toolbar-actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+    .btn-secondary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      border-color: var(--green2);
+    }
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .tr-status {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-height: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .tr-breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .tr-breakdown-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .tr-breakdown-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+      color: var(--text);
+    }
+    .tr-table-wrap {
+      overflow-x: auto;
+    }
+    .tr-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .tr-table th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .tr-table td {
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .tr-table tr:last-child td {
+      border-bottom: none;
+    }
+    .tr-win { color: var(--green); font-weight: 700; }
+    .tr-loss { color: var(--red); font-weight: 700; }
+    .tr-pending { color: var(--muted); }
+    .tr-log-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+    .tr-log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .tr-log-filters select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .status-pill.won { background: rgba(0, 230, 118, 0.15); color: var(--green); }
+    .status-pill.lost { background: rgba(255, 82, 82, 0.15); color: var(--red); }
+    .status-pill.pending { background: rgba(90, 122, 159, 0.15); color: var(--muted); }
+
+    /* Matches Container */
+    .matches-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Match Card */
+    .match-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .match-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: var(--border);
+    }
+    
+    .match-card.has-high {
+      border-left: 4px solid var(--green);
+    }
+
+    .match-header {
+      background: rgba(0,0,0,0.2);
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .match-teams {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    
+    .vs {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .match-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    
+    .league-badge {
+      background: var(--card);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .match-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-data-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 800px) {
+      .form-data-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .team-col {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .team-name {
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .h2h-odds {
+      font-size: 0.85rem;
+      color: var(--yellow);
+      background: rgba(255,215,64,0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .form-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .form-label {
+      color: var(--muted);
+    }
+
+    .form-value.good { color: var(--green); font-weight: 600; }
+    .form-value.ok { color: var(--yellow); font-weight: 600; }
+    .form-value.bad { color: var(--red); font-weight: 600; }
+
+    .last-6 {
+      display: flex;
+      gap: 4px;
+    }
+
+    .result-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #000;
+    }
+    
+    .result-dot.W { background: var(--green); }
+    .result-dot.D { background: var(--yellow); }
+    .result-dot.L { background: var(--red); }
+    .result-dot.none { background: var(--muted); color: var(--text); }
+
+    /* Picks Section */
+    .picks-container {
+      border-top: 1px dashed var(--border);
+      padding-top: 1.5rem;
+    }
+
+    .picks-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+    }
+
+    .picks-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .pick-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    
+    .pick-pill.single {
+      color: var(--orange);
+      background: rgba(255, 145, 0, 0.1);
+      border: 1px solid rgba(255, 145, 0, 0.25);
+    }
+    
+    .pick-pill.acca {
+      color: var(--green);
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .filter-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .analysis-toggle {
+      background: transparent;
+      border: none;
+      color: var(--blue);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      padding: 0;
+    }
+    
+    .analysis-toggle:hover {
+      text-decoration: underline;
+    }
+
+    .analysis-details {
+      display: none;
+      margin-top: 1rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+    }
+    
+    .analysis-details.open {
+      display: block;
+    }
+
+    .analysis-details ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .analysis-details li {
+      position: relative;
+      padding-left: 1.2rem;
+      color: #b0c4de;
+    }
+    
+    .analysis-details li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+    
+    .market-reason-group {
+      margin-bottom: 0.8rem;
+    }
+    .market-reason-group:last-child {
+      margin-bottom: 0;
+    }
+    .market-reason-title {
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Footer */
+    footer {
+      padding: 2rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: auto;
+    }
+    
+    .disclaimer {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255, 82, 82, 0.1);
+      border: 1px solid rgba(255, 82, 82, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      color: #ff8a80;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">⚽</div>
+      <div class="title-group">
+        <h1>SportyBet Football Scout</h1>
+        <p>AI Agent — Odds + ESPN Form Analysis Engine</p>
+      </div>
+    </div>
+    <div class="api-key-group">
+      <input type="password" id="api-key" placeholder="The Odds API Key..." autocomplete="off">
+      <a href="https://the-odds-api.com/" target="_blank">Get free API key</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="view-toggle">
+      <button id="tab-scanner" class="view-tab-btn active">🔍 Scanner</button>
+      <button id="tab-trackrecord" class="view-tab-btn">📊 Track Record</button>
+    </div>
+
+    <div id="view-scanner">
+    <section class="controls-panel">
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Start Date</label>
+          <input type="date" id="start-date">
+        </div>
+        <div class="control-group">
+          <label>End Date</label>
+          <input type="date" id="end-date">
+        </div>
+        <div class="control-group">
+          <label>Bookmaker Region</label>
+          <select id="region-select">
+            <option value="eu" selected>Europe (Default)</option>
+            <option value="uk">UK</option>
+            <option value="au">Australia</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Min Odds Filter</label>
+          <input type="number" id="min-odds" value="1.20" step="0.01" min="1.01">
+        </div>
+        <div class="control-group">
+          <label>Options</label>
+          <label class="checkbox-label"><input type="checkbox" id="m-hide-empty" checked> Hide matches with no recommendations</label>
+        </div>
+        <div class="control-group markets-filter">
+          <label>Market Filters</label>
+          <div class="markets-grid">
+            <label class="checkbox-label"><input type="checkbox" id="m-match-winner" checked> Match Winner (1-2)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-draw"> Draw (X) (weak signal per backtest — off by default)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-gg" checked> Both Teams to Score (GG)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-gg-over-25"> GG & Over 2.5 (weak signal per backtest — off by default)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-over-15" checked> Over 1.5 Goals</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-over-25" checked> Over 2.5 Goals</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-over-35" checked> Over 3.5 Goals</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-team-over-15" checked> Team Over 1.5 Goals</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-team-over-25"> Team Over 2.5 Goals (weak signal per backtest — off by default)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-handicap" checked> Handicap</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-double-chance" checked> Double Chance (1X, X2, 12)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-team-over-05" checked> Team to Score (Over 0.5)</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-corners"> Corners (goal-based proxy — no real corner data, off by default)</label>
+          </div>
+        </div>
+      </div>
+      <button id="btn-scan" class="btn-scan">
+        <span class="btn-text">Scan + Analyse</span>
+      </button>
+    </section>
+
+    <section class="stats-row">
+      <div class="stat-card" id="card-leagues">
+        <div class="stat-value" id="stat-leagues">0</div>
+        <div class="stat-label">Leagues Scanned</div>
+      </div>
+      <div class="stat-card" id="card-matches">
+        <div class="stat-value" id="stat-matches">0</div>
+        <div class="stat-label">Matches Checked</div>
+      </div>
+      <div class="stat-card" id="card-form">
+        <div class="stat-value" id="stat-form">0</div>
+        <div class="stat-label">Form Data Loaded</div>
+      </div>
+      <div class="stat-card picks">
+        <div class="stat-value" id="stat-picks">0</div>
+        <div class="stat-label">Total Picks</div>
+      </div>
+      <div class="stat-card high">
+        <div class="stat-value" id="stat-high">0</div>
+        <div class="stat-label">🟢 High Confidence</div>
+      </div>
+    </section>
+
+    <section class="status-bar">
+      <div class="status-text">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-message">Ready to scan.</span>
+      </div>
+      <button id="btn-export" class="btn-export">📥 Export CSV</button>
+    </section>
+
+    <details class="admin-publish">
+      <summary>⚙️ Admin: Publish to Artvion Football Tips</summary>
+      <div class="admin-publish-body">
+        <p class="admin-publish-note">Sends this scan's picks to the public subscription site. Not part of the personal scanning tool -- only the site owner should use this.</p>
+        <div class="admin-publish-row">
+          <input type="text" id="saas-api-url" placeholder="Artvion Football Tips API URL, e.g. http://localhost:8000">
+          <input type="password" id="saas-admin-token" placeholder="Admin token">
+          <button id="btn-publish-saas" class="btn-secondary">🚀 Publish Today's Picks</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-filter="all">All Recommendations</button>
+      <button class="tab-btn" data-filter="single">🎯 Singles Only</button>
+      <button class="tab-btn" data-filter="acca">🔗 Accas Only</button>
+    </div>
+
+    <section id="matches-container" class="matches-grid">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🤖</div>
+        <div class="empty-title">Agent Ready</div>
+        <p>Add your free API key, pick a date range, click <strong>Scan + Analyse</strong>.<br>
+        The agent checks odds + ESPN form data for every match, then recommends the best markets.</p>
+      </div>
+    </section>
+    </div>
+
+    <div id="view-trackrecord" style="display:none;">
+      <section class="tr-toolbar">
+        <p class="tr-note">Every AI pick logged during a scan is saved to <code>predictions.db</code> on your local server. This shows the <strong>real</strong> win rate — not a guess.</p>
+        <div class="tr-toolbar-actions">
+          <button id="btn-resolve-pending" class="btn-secondary">🔄 Resolve Pending Results</button>
+          <button id="btn-refresh-tr" class="btn-secondary">↻ Refresh</button>
+        </div>
+      </section>
+      <div id="tr-status" class="tr-status"></div>
+
+      <section class="stats-row" id="tr-summary-cards">
+        <div class="stat-card"><div class="stat-value" id="tr-total">–</div><div class="stat-label">Total Picks Logged</div></div>
+        <div class="stat-card"><div class="stat-value" id="tr-resolved">–</div><div class="stat-label">Resolved</div></div>
+        <div class="stat-card"><div class="stat-value" id="tr-pending">–</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card picks"><div class="stat-value" id="tr-winrate">–</div><div class="stat-label">Win Rate</div></div>
+        <div class="stat-card high"><div class="stat-value" id="tr-roi">–</div><div class="stat-label">ROI (flat stake, priced picks only)</div></div>
+      </section>
+
+      <div class="tr-breakdown-grid">
+        <div class="tr-breakdown-card">
+          <h3>By Market</h3>
+          <div class="tr-table-wrap"><table class="tr-table" id="tr-table-market"></table></div>
+        </div>
+        <div class="tr-breakdown-card">
+          <h3>By Confidence</h3>
+          <div class="tr-table-wrap"><table class="tr-table" id="tr-table-confidence"></table></div>
+        </div>
+        <div class="tr-breakdown-card">
+          <h3>By League</h3>
+          <div class="tr-table-wrap"><table class="tr-table" id="tr-table-league"></table></div>
+        </div>
+      </div>
+
+      <section class="tr-log-section">
+        <div class="tr-log-header">
+          <h3>Prediction Log</h3>
+          <div class="tr-log-filters">
+            <select id="tr-filter-status">
+              <option value="">All statuses</option>
+              <option value="WON">Won</option>
+              <option value="LOST">Lost</option>
+              <option value="PENDING">Pending</option>
+            </select>
+          </div>
+        </div>
+        <div class="tr-table-wrap"><table class="tr-table" id="tr-table-log"></table></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="disclaimer">
+      ⚠️ Disclaimer: Odds are sourced from The Odds API (major EU bookmakers) as proxies for SportyBet Nigeria. Form data from ESPN (public, free, no key needed). Always verify odds and markets on sportybet.com/ng before betting. Bet responsibly.
+    </div>
+  </footer>
+
+  <script>
+let LEAGUES = [
+  { key:'soccer_epl', name:'Premier League', flag:'🏴' },
+  { key:'soccer_england_championship', name:'Championship', flag:'🏴' },
+  { key:'soccer_spain_la_liga', name:'La Liga', flag:'🇪🇸' },
+  { key:'soccer_italy_serie_a', name:'Serie A', flag:'🇮🇹' },
+  { key:'soccer_france_ligue_one', name:'Ligue 1', flag:'🇫🇷' },
+  { key:'soccer_germany_bundesliga', name:'Bundesliga', flag:'🇩🇪' },
+  { key:'soccer_netherlands_eredivisie', name:'Eredivisie', flag:'🇳🇱' },
+  { key:'soccer_portugal_primeira_liga', name:'Primeira Liga', flag:'🇵🇹' },
+  { key:'soccer_turkey_super_league', name:'Süper Lig', flag:'🇹🇷' },
+  { key:'soccer_scotland_premiership', name:'Scottish Prem.', flag:'🏴' },
+  { key:'soccer_belgium_first_div', name:'Belgian Pro Lg.', flag:'🇧🇪' },
+  { key:'soccer_brazil_campeonato', name:'Brasileirão', flag:'🇧🇷' },
+  { key:'soccer_argentina_primera_division', name:'Liga Prof.', flag:'🇦🇷' },
+  { key:'soccer_poland_ekstraklasa', name:'Ekstraklasa', flag:'🇵🇱' },
+  { key:'soccer_austria_bundesliga', name:'Austrian BL', flag:'🇦🇹' },
+  { key:'soccer_greece_super_league', name:'Super League GR', flag:'🇬🇷' },
+  { key:'soccer_denmark_superliga', name:'Superliga DK', flag:'🇩🇰' },
+  { key:'soccer_norway_eliteserien', name:'Eliteserien', flag:'🇳🇴' },
+  { key:'soccer_sweden_allsvenskan', name:'Allsvenskan', flag:'🇸🇪' },
+  { key:'soccer_chile_campeonato', name:'Primera Chile', flag:'🇨🇱' },
+  { key:'soccer_colombia_primera_a', name:'Liga Colombia', flag:'🇨🇴' },
+  { key:'soccer_mexico_ligamx', name:'Liga MX', flag:'🇲🇽' },
+  { key:'soccer_usa_mls', name:'MLS', flag:'🇺🇸' },
+  { key:'soccer_uefa_champs_league', name:'Champions League', flag:'🏆' },
+  { key:'soccer_uefa_europa_league', name:'Europa League', flag:'🏆' },
+  { key:'soccer_south_africa_premier_division', name:'DSTV Prem.', flag:'🇿🇦' }
+];
+
+const ESPN_SLUGS = {
+  'soccer_epl': 'eng.1', 'soccer_england_championship': 'eng.2',
+  'soccer_spain_la_liga': 'esp.1', 'soccer_italy_serie_a': 'ita.1',
+  'soccer_france_ligue_one': 'fra.1', 'soccer_germany_bundesliga': 'ger.1',
+  'soccer_netherlands_eredivisie': 'ned.1', 'soccer_portugal_primeira_liga': 'por.1',
+  'soccer_turkey_super_league': 'tur.1', 'soccer_scotland_premiership': 'sco.1',
+  'soccer_belgium_first_div': 'bel.1', 'soccer_brazil_campeonato': 'bra.1',
+  'soccer_argentina_primera_division': 'arg.1', 'soccer_poland_ekstraklasa': 'pol.1',
+  'soccer_austria_bundesliga': 'aut.1', 'soccer_greece_super_league': 'gre.1',
+  'soccer_denmark_superliga': 'den.1', 'soccer_norway_eliteserien': 'nor.1',
+  'soccer_sweden_allsvenskan': 'swe.1', 'soccer_chile_campeonato': 'chi.1',
+  'soccer_colombia_primera_a': 'col.1', 'soccer_mexico_ligamx': 'mex.1',
+  'soccer_usa_mls': 'usa.1', 'soccer_uefa_champs_league': 'uefa.champions',
+  'soccer_uefa_europa_league': 'uefa.europa',
+  'soccer_south_africa_premier_division': 'rsa.1'
+};
+
+
+const getEspnSlug = (oddsKey) => {
+  if (ESPN_SLUGS[oddsKey]) return ESPN_SLUGS[oddsKey];
+  if (oddsKey === 'soccer_club_friendlies') return 'club.friendly';
+  if (oddsKey === 'soccer_international_friendlies') return 'intl.friendly';
+  if (oddsKey === 'soccer_uefa_champs_league_qualification') return 'uefa.champions';
+  if (oddsKey === 'soccer_uefa_europa_league_qualification') return 'uefa.europa';
+  if (oddsKey === 'soccer_uefa_europa_conference_league_qualification') return 'uefa.europa.conf';
+  if (oddsKey === 'soccer_conmebol_copa_libertadores') return 'conmebol.libertadores';
+  return null;
+};
+
+const CACHE = {
+  espnLeagueTeams: {},
+  espnTeamSchedules: {}
+};
+let globalMatches = [];
+let isScanning = false;
+let currentBetTypeFilter = 'all';
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const qs = (sel) => document.querySelector(sel);
+
+const today = new Date();
+const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+if(qs('#start-date')) qs('#start-date').value = today.toISOString().split('T')[0];
+if(qs('#end-date')) qs('#end-date').value = nextWeek.toISOString().split('T')[0];
+
+const setStatus = (msg, scanning = true) => {
+  if(!qs('#status-message')) return;
+  qs('#status-message').textContent = msg;
+  if(scanning) qs('#status-dot').classList.add('scanning');
+  else qs('#status-dot').classList.remove('scanning');
+};
+
+const updateStats = (leagues, matches, form, picks, high) => {
+  if(!qs('#stat-leagues')) return;
+  if(leagues !== null) qs('#stat-leagues').textContent = leagues;
+  if(matches !== null) qs('#stat-matches').textContent = matches;
+  if(form !== null) qs('#stat-form').textContent = form;
+  if(picks !== null) qs('#stat-picks').textContent = picks;
+  if(high !== null) qs('#stat-high').textContent = high;
+};
+
+const getScore = (competitor) => {
+  const s = competitor.score;
+  if (s === undefined || s === null) return NaN;
+  if (typeof s === 'string') return parseInt(s);
+  if (typeof s === 'number') return s;
+  if (typeof s === 'object') {
+    if (s.displayValue) return parseInt(s.displayValue);
+    if (s.value !== undefined) return parseInt(s.value);
+  }
+  return NaN;
+};
+
+const normalizeName = (name) => {
+  return name.toLowerCase()
+    .replace(/fc/g, '')
+    .replace(/united/g, 'utd')
+    .replace(/athletic/g, 'ath')
+    .replace(/[^a-z0-9]/g, '');
+};
+
+const fuzzyMatchTeam = (oddsName, espnTeams) => {
+  const normOdds = normalizeName(oddsName);
+  let bestMatch = null;
+  let maxScore = -1;
+  for (const t of espnTeams) {
+    const normEspn = normalizeName(t.team.name);
+    const normAbbrev = t.team.abbreviation ? normalizeName(t.team.abbreviation) : '';
+    const normShort = t.team.shortDisplayName ? normalizeName(t.team.shortDisplayName) : '';
+    if (normOdds === normEspn || normOdds === normAbbrev || normOdds === normShort) return t.team.id;
+    if (normOdds.includes(normEspn) || normEspn.includes(normOdds) || 
+        (normShort && (normOdds.includes(normShort) || normShort.includes(normOdds)))) {
+      let score = Math.min(normOdds.length, normEspn.length) / Math.max(normOdds.length, normEspn.length);
+      if (score > maxScore) {
+        maxScore = score;
+        bestMatch = t.team.id;
+      }
+    }
+  }
+  return maxScore > 0.5 ? bestMatch : null;
+};
+
+const espnBase = (path) => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return window.location.origin + '/espn/' + path;
+  }
+  return 'https://site.api.espn.com/apis/site/v2/sports/' + path;
+};
+
+const fetchESPNTeams = async (espnSlug) => {
+  if (CACHE.espnLeagueTeams[espnSlug]) return CACHE.espnLeagueTeams[espnSlug];
+  try {
+    const res = await fetch(espnBase(`soccer/${espnSlug}/teams`));
+    if (!res.ok) return [];
+    const data = await res.json();
+    const teams = data.sports[0].leagues[0].teams;
+    CACHE.espnLeagueTeams[espnSlug] = teams;
+    return teams;
+  } catch (e) {
+    console.error("Error fetching ESPN teams for", espnSlug, e);
+    return [];
+  }
+};
+
+const fetchESPNSchedule = async (teamId, espnSlug) => {
+  const year = new Date().getFullYear();
+  const cacheKey = `${teamId}_${year}`;
+  if (CACHE.espnTeamSchedules[cacheKey]) return CACHE.espnTeamSchedules[cacheKey];
+  try {
+    let res = await fetch(espnBase(`soccer/${espnSlug}/teams/${teamId}/schedule?season=${year}`));
+    if (!res.ok) return null;
+    let data = await res.json();
+    let events = data.events || [];
+    if (events.length < 10) {
+      try {
+        await sleep(200);
+        let prevRes = await fetch(espnBase(`soccer/${espnSlug}/teams/${teamId}/schedule?season=${year - 1}`));
+        if (prevRes.ok) {
+          let prevData = await prevRes.json();
+          events = [...(prevData.events || []), ...events];
+        }
+      } catch(e) {}
+    }
+    CACHE.espnTeamSchedules[cacheKey] = events;
+    return events;
+  } catch (e) {
+    console.error("Error fetching schedule", teamId, e);
+    return null;
+  }
+};
+
+const processForm = (events, teamId) => {
+  if (!events || events.length === 0) return null;
+  const completed = events.filter(e => {
+    const status = e.competitions?.[0]?.status?.type?.name || '';
+    return status.includes('FULL_TIME') || status.includes('STATUS_FINAL');
+  });
+  completed.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const last6 = completed.slice(0, 6);
+  if (last6.length === 0) return null;
+  
+  let goalsScored = 0, goalsConceded = 0;
+  let cleanSheets = 0, wins = 0;
+  let gamesScored = 0, gamesOver1 = 0;
+  let record = [];
+  
+  last6.forEach(event => {
+    const comp = event.competitions[0];
+    const team1 = comp.competitors[0];
+    const team2 = comp.competitors[1];
+    let us = team1.id === teamId ? team1 : team2;
+    let them = team1.id === teamId ? team2 : team1;
+    let scored = getScore(us);
+    let conceded = getScore(them);
+    if (isNaN(scored) || isNaN(conceded)) return;
+    goalsScored += scored;
+    goalsConceded += conceded;
+    if (conceded === 0) cleanSheets++;
+    if (scored > 0) gamesScored++;
+    if (scored >= 2) gamesOver1++;
+    if (scored > conceded) { wins++; record.push('W'); } 
+    else if (scored === conceded) { record.push('D'); } 
+    else { record.push('L'); }
+  });
+  
+  const n = record.length;
+  if (n === 0) return null;
+  return {
+    played: n,
+    record: record.reverse(),
+    avgScored: (goalsScored / n).toFixed(2),
+    avgConceded: (goalsConceded / n).toFixed(2),
+    cleanSheets,
+    scoringRate: gamesScored / n,
+    gamesScored,
+    over1Rate: gamesOver1 / n,
+    gamesOver1,
+    winRate: wins / n
+  };
+};
+
+// ============ Probability Engine (independent Poisson goal model) ============
+// Standard, well-documented approach in football analytics: model each team's
+// goals as a Poisson variable, derive expected goals (lambda) from recent
+// attack/defense form, then read off match/market probabilities from the
+// resulting score-grid. This replaces ad-hoc "avgScored >= X" style cutoffs
+// with a real probability that can be checked against the bookmaker's own
+// (de-vigged) implied probability to look for genuine value, not just a
+// stat that crossed an arbitrary line.
+const MAX_GOALS_GRID = 8;
+
+const factorial = (n) => { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; };
+const poissonProb = (lambda, k) => Math.exp(-lambda) * Math.pow(lambda, k) / factorial(k);
+
+// Removes the bookmaker's margin (overround) from odds so probabilities sum to 1.
+const devig3Way = (homeOdds, drawOdds, awayOdds) => {
+  const rawH = 1 / homeOdds, rawD = drawOdds ? 1 / drawOdds : 0, rawA = 1 / awayOdds;
+  const overround = rawH + rawD + rawA;
+  return { home: rawH / overround, draw: rawD / overround, away: rawA / overround };
+};
+const devig2Way = (sideOdds, otherOdds) => {
+  if (!sideOdds) return null;
+  if (otherOdds) {
+    const rawSide = 1 / sideOdds, rawOther = 1 / otherOdds;
+    return rawSide / (rawSide + rawOther);
+  }
+  // Opposite price wasn't fetched -- assume a typical ~6% bookmaker margin.
+  return Math.min(0.98, (1 / sideOdds) / 1.06);
+};
+
+const deriveMatchProbabilities = (homeForm, awayForm) => {
+  // Expected goals: blend of a team's own scoring form with the opponent's
+  // conceding form. Floored so a perfect defensive record never collapses lambda to 0.
+  const lambdaHome = Math.max(0.15, (parseFloat(homeForm.avgScored) + parseFloat(awayForm.avgConceded)) / 2);
+  const lambdaAway = Math.max(0.15, (parseFloat(awayForm.avgScored) + parseFloat(homeForm.avgConceded)) / 2);
+
+  const homeDist = [], awayDist = [];
+  for (let k = 0; k <= MAX_GOALS_GRID; k++) {
+    homeDist.push(poissonProb(lambdaHome, k));
+    awayDist.push(poissonProb(lambdaAway, k));
+  }
+
+  const matrix = [];
+  for (let i = 0; i <= MAX_GOALS_GRID; i++) {
+    matrix.push([]);
+    for (let j = 0; j <= MAX_GOALS_GRID; j++) {
+      matrix[i][j] = homeDist[i] * awayDist[j];
+    }
+  }
+
+  let pHomeWin = 0, pDraw = 0, pAwayWin = 0;
+  let pOver15 = 0, pOver25 = 0, pOver35 = 0, pBtts = 0, pGgOver25 = 0;
+  let pHomeOver05 = 0, pHomeOver15 = 0, pHomeOver25 = 0;
+  let pAwayOver05 = 0, pAwayOver15 = 0, pAwayOver25 = 0;
+
+  for (let i = 0; i <= MAX_GOALS_GRID; i++) {
+    for (let j = 0; j <= MAX_GOALS_GRID; j++) {
+      const p = matrix[i][j];
+      if (i > j) pHomeWin += p; else if (i === j) pDraw += p; else pAwayWin += p;
+      if (i + j >= 2) pOver15 += p;
+      if (i + j >= 3) pOver25 += p;
+      if (i + j >= 4) pOver35 += p;
+      if (i >= 1 && j >= 1) {
+        pBtts += p;
+        if (i + j >= 3) pGgOver25 += p;
+      }
+      if (i >= 1) pHomeOver05 += p; if (i >= 2) pHomeOver15 += p; if (i >= 3) pHomeOver25 += p;
+      if (j >= 1) pAwayOver05 += p; if (j >= 2) pAwayOver15 += p; if (j >= 3) pAwayOver25 += p;
+    }
+  }
+
+  // Probability the underdog's deficit stays within `line` goals (handicap coverage).
+  const handicapCoverProb = (line, dogIsHome) => {
+    let p = 0;
+    for (let i = 0; i <= MAX_GOALS_GRID; i++) {
+      for (let j = 0; j <= MAX_GOALS_GRID; j++) {
+        const dogScore = dogIsHome ? i : j;
+        const favScore = dogIsHome ? j : i;
+        if (dogScore + line > favScore) p += matrix[i][j];
+      }
+    }
+    return p;
+  };
+
+  return {
+    lambdaHome, lambdaAway, matrix,
+    pHomeWin, pDraw, pAwayWin, pOver15, pOver25, pOver35, pBtts, pGgOver25,
+    pHomeOver05, pHomeOver15, pHomeOver25, pAwayOver05, pAwayOver15, pAwayOver25,
+    handicapCoverProb
+  };
+};
+
+const EDGE_HIGH = 0.10, EDGE_MEDIUM = 0.06, EDGE_LOW = 0.03;
+const edgeConf = (edge) => edge >= EDGE_HIGH ? 'high' : edge >= EDGE_MEDIUM ? 'medium' : 'low';
+const PROB_HIGH = 0.75, PROB_MEDIUM = 0.65, PROB_LOW = 0.55;
+const probConf = (p) => p >= PROB_HIGH ? 'high' : p >= PROB_MEDIUM ? 'medium' : 'low';
+const pct = (p) => Math.round(p * 100);
+
+const analyzeMatch = (match, homeForm, awayForm, filters) => {
+  const picks = [];
+  const rejections = [];
+  const bookmaker = match.bookmakers?.[0];
+  if (!bookmaker) return { picks, rejections };
+  
+  const h2h = bookmaker.markets.find(m => m.key === 'h2h');
+  const totals = bookmaker.markets.find(m => m.key === 'totals');
+  const btts = bookmaker.markets.find(m => m.key === 'btts');
+  if (!h2h) return { picks, rejections };
+  
+  let homeOdds = 0, drawOdds = 0, awayOdds = 0;
+  h2h.outcomes.forEach(o => {
+    if (o.name === match.home_team) homeOdds = o.price;
+    else if (o.name === 'Draw') drawOdds = o.price;
+    else awayOdds = o.price;
+  });
+
+  if (!homeOdds || !awayOdds) return { picks, rejections };
+
+  let over15Odds = 0, over25Odds = 0, over35Odds = 0, under25Odds = 0;
+  if (totals) {
+    totals.outcomes.forEach(o => {
+      if (o.name === 'Over' && o.point === 1.5) over15Odds = o.price;
+      if (o.name === 'Over' && o.point === 2.5) over25Odds = o.price;
+      if (o.name === 'Over' && o.point === 3.5) over35Odds = o.price;
+      if (o.name === 'Under' && o.point === 2.5) under25Odds = o.price;
+    });
+  }
+  const estOver15Odds = over15Odds || (over25Odds ? parseFloat((1.0 + (over25Odds - 1.0) * 0.38).toFixed(2)) : 0);
+
+  let bttsYesOdds = 0, bttsNoOdds = 0;
+  if (btts) {
+    btts.outcomes.forEach(o => {
+      if (o.name === 'Yes') bttsYesOdds = o.price;
+      if (o.name === 'No') bttsNoOdds = o.price;
+    });
+  }
+
+  const hasForm = homeForm && awayForm;
+  const minOdds = filters.minOdds || 1.20;
+
+  if (!hasForm) {
+    if (filters.matchWinner) {
+      let picked = false;
+      [{ t: match.home_team, odds: homeOdds }, { t: match.away_team, odds: awayOdds }].forEach(team => {
+        if (team.odds >= minOdds && team.odds <= 1.60) {
+          picks.push({ market: 'Match Winner', display: `${team.t} to Win`, conf: 'medium', odds: team.odds, betType: 'acca', reasons: [`Market Heuristics: Strong favorite based on bookmaker odds (${team.odds})`] });
+          picked = true;
+        } else if (team.odds >= 1.80 && team.odds <= 2.50) {
+          picks.push({ market: 'Match Winner', display: `${team.t} to Win`, conf: 'medium', odds: team.odds, betType: 'single', reasons: [`Market Heuristics: Competitive value favorite based on bookmaker odds (${team.odds})`] });
+          picked = true;
+        }
+      });
+      if (!picked) rejections.push(`Match Winner: Skip (Bookmaker odds do not meet fallback favorite thresholds)`);
+    }
+
+    if (filters.over25) {
+      if (over25Odds >= minOdds && over25Odds <= 1.55) {
+        picks.push({ market: 'Over 2.5 Total Goals', display: `Over 2.5 Goals`, conf: 'medium', odds: over25Odds || null, betType: over25Odds >= 1.80 ? 'single' : 'acca', reasons: [`Market Heuristics: Strong high-scoring expectation by bookmakers (Over 2.5 odds: ${over25Odds})`] });
+      } else {
+        rejections.push(`Over 2.5 Goals: Skip (Over 2.5 odds ${over25Odds || 'N/A'} too high, requires <= 1.55)`);
+      }
+    }
+
+    if (filters.over35) {
+      if (over35Odds >= minOdds && over35Odds <= 2.10) {
+        picks.push({ market: 'Over 3.5 Total Goals', display: `Over 3.5 Goals`, conf: 'medium', odds: over35Odds || null, betType: 'single', reasons: [`Market Heuristics: Very high scoring expectation by bookmakers (Over 3.5 odds: ${over35Odds})`] });
+      } else {
+        rejections.push(`Over 3.5 Goals: Skip (Over 3.5 odds ${over35Odds || 'N/A'} too high, requires <= 2.10)`);
+      }
+    }
+
+    if (filters.gg) {
+      if (over25Odds > 0 && over25Odds <= 1.50) {
+        picks.push({ market: 'Both Teams to Score', display: `GG (Both to Score)`, conf: 'medium', odds: bttsYesOdds || null, betType: (bttsYesOdds >= 1.80 ? 'single' : 'acca'), reasons: [`Market Heuristics: High-scoring match expected, indicating open defenses (Over 2.5 odds: ${over25Odds})`] });
+      } else {
+        rejections.push(`GG: Skip (Over 2.5 odds ${over25Odds || 'N/A'} too high, requires <= 1.50 for GG fallback)`);
+      }
+    }
+
+    if (filters.ggOver25) {
+      if (over25Odds > 0 && over25Odds <= 1.50 && homeOdds >= 1.50 && awayOdds >= 1.50) {
+        picks.push({ market: 'GG & Over 2.5', display: `GG & Over 2.5 Goals`, conf: 'medium', odds: null, betType: 'single', reasons: [`Market Heuristics: High scoring and competitive match expected (Over 2.5 odds: ${over25Odds}, H2H: Home ${homeOdds} vs Away ${awayOdds})`] });
+      } else {
+        rejections.push(`GG & Over 2.5: Skip (Odds do not meet competitive high-scoring fallback requirements)`);
+      }
+    }
+
+    if (filters.doubleChance) {
+      let picked = false;
+      if (homeOdds > 0 && homeOdds <= 1.40) {
+        picks.push({ market: 'Double Chance 1X', display: `Double Chance 1X (Home/Draw)`, conf: 'medium', odds: null, betType: 'acca', reasons: [`Market Heuristics: Strong home favorite odds (${homeOdds})`] });
+        picked = true;
+      }
+      if (awayOdds > 0 && awayOdds <= 1.40) {
+        picks.push({ market: 'Double Chance X2', display: `Double Chance X2 (Away/Draw)`, conf: 'medium', odds: null, betType: 'acca', reasons: [`Market Heuristics: Strong away favorite odds (${awayOdds})`] });
+        picked = true;
+      }
+      if (!picked) rejections.push(`Double Chance: Skip (H2H odds too balanced for 1X or X2 fallback)`);
+    }
+
+    if (filters.teamOver05) {
+      let picked = false;
+      if (homeOdds > 0 && homeOdds <= 1.60) {
+        picks.push({ market: 'Team to Score (Over 0.5)', display: `${match.home_team} to Score (Over 0.5)`, conf: 'medium', odds: null, betType: 'acca', reasons: [`Market Heuristics: Strong home team offensive favor based on H2H odds (${homeOdds})`] });
+        picked = true;
+      }
+      if (awayOdds > 0 && awayOdds <= 1.60) {
+        picks.push({ market: 'Team to Score (Over 0.5)', display: `${match.away_team} to Score (Over 0.5)`, conf: 'medium', odds: null, betType: 'acca', reasons: [`Market Heuristics: Strong away team offensive favor based on H2H odds (${awayOdds})`] });
+        picked = true;
+      }
+      if (!picked) rejections.push(`Team to Score: Skip (H2H odds too balanced to recommend Over 0.5 fallback)`);
+    }
+
+    if (filters.draw) rejections.push("Draw: Skip (Requires ESPN form data)");
+    if (filters.handicap) rejections.push("Handicap: Skip (Requires ESPN form data)");
+    if (filters.teamOver15) rejections.push("Team Over 1.5: Skip (Requires ESPN form data)");
+    if (filters.teamOver25) rejections.push("Team Over 2.5: Skip (Requires ESPN form data)");
+    if (filters.corners) rejections.push("Corners: Skip (Requires ESPN form data)");
+
+    return { picks, rejections };
+  }
+
+  // Every market below is graded from the same Poisson probability engine,
+  // gated on the model's OWN calibrated probability -- not on comparing to
+  // market odds. A backtest across 5 seasons of real results (see
+  // backtest.py) showed that "model probability beats de-vigged market
+  // probability" does NOT predict real wins: picks where the model disagreed
+  // most with the market actually performed WORST (21% win rate on the
+  // biggest claimed edges vs 59% where the model deferred to the market).
+  // That's the signature of the model picking up sampling noise from a
+  // shallow 6-game form window, not real mispricing -- bookmaker closing
+  // lines are set with far more information than this tool has access to.
+  // The raw probability itself, independent of any market comparison, WAS
+  // reasonably well calibrated (see backtest notes), so that's what gates
+  // picks now. Market odds are still shown for payout context, just not
+  // used as a trigger.
+  const mp = deriveMatchProbabilities(homeForm, awayForm);
+  const mkt3 = devig3Way(homeOdds, drawOdds, awayOdds);
+  const expGoalsStr = `Expected goals: ${mp.lambdaHome.toFixed(2)} - ${mp.lambdaAway.toFixed(2)}`;
+
+  // A. Match Winner (1-2)
+  if (filters.matchWinner) {
+    let picked = false;
+    [{ t: match.home_team, odds: homeOdds, pModel: mp.pHomeWin, pMarket: mkt3.home },
+     { t: match.away_team, odds: awayOdds, pModel: mp.pAwayWin, pMarket: mkt3.away }].forEach(team => {
+      if (team.odds < minOdds) {
+        rejections.push(`Match Winner: ${team.t} odds (${team.odds}) below minimum (${minOdds})`);
+        return;
+      }
+      if (team.pModel >= PROB_LOW) {
+        picks.push({
+          market: 'Match Winner',
+          display: `${team.t} to Win`,
+          conf: probConf(team.pModel),
+          odds: team.odds,
+          betType: team.odds >= 1.80 ? 'single' : 'acca',
+          reasons: [`Model probability: ${pct(team.pModel)}% (market-implied: ${pct(team.pMarket)}%)`, expGoalsStr, `Odds: ${team.odds}`]
+        });
+        picked = true;
+      } else {
+        rejections.push(`Match Winner: ${team.t} model probability too low (${pct(team.pModel)}%)`);
+      }
+    });
+    if (!picked && rejections.filter(r => r.startsWith("Match Winner")).length === 0) {
+      rejections.push(`Match Winner: Model probability too low for either team`);
+    }
+  }
+
+  // B. Draw (X) -- OFF by default. Backtesting showed independent-Poisson
+  // draw probability barely discriminates: actual draw rate stayed ~21-26%
+  // across the entire 0.20-0.30+ predicted range. This is a known weakness
+  // of this model family (draws need a specific low-score correlation term
+  // -- see Dixon-Coles -- that a plain independent Poisson model doesn't have).
+  // Left available for experimentation, but don't trust it without your own
+  // tracked evidence to the contrary.
+  if (filters.draw) {
+    rejections.push(`Draw: Model has no reliable signal for this market (see backtest notes) -- skipped`);
+  }
+
+  // C. Both Teams to Score (GG)
+  if (filters.gg) {
+    if (mp.pBtts >= PROB_MEDIUM) {
+      picks.push({
+        market: 'Both Teams to Score', display: `GG (Both to Score)`, conf: probConf(mp.pBtts),
+        odds: bttsYesOdds || null, betType: bttsYesOdds >= 1.80 ? 'single' : 'acca',
+        reasons: [`Model probability: ${pct(mp.pBtts)}%`, expGoalsStr]
+      });
+    } else {
+      rejections.push(`Both Teams to Score (GG): Model probability too low (${pct(mp.pBtts)}%)`);
+    }
+  }
+
+  // D. GG & Over 2.5 Goals -- OFF by default. Backtesting showed this
+  // compound (BTTS AND Over 2.5) probability doesn't hold up: the bulk of
+  // picks sat in the "medium" confidence tier (nominally >=65% probability)
+  // but actually won only 52.2% of the time. No confidence tier cleared a
+  // usable bar. Likely cause: treating BTTS and Over 2.5 as independent
+  // events overstates their joint probability more than either does alone.
+  if (filters.ggOver25) {
+    rejections.push(`GG & Over 2.5: Model has no reliable signal for this combined market (see backtest notes) -- skipped`);
+  }
+
+  // Over 1.5 / 2.5 / 3.5 Total Goals
+  if (filters.over15) {
+    if (estOver15Odds && estOver15Odds < minOdds) {
+      rejections.push(`Over 1.5: Odds (${estOver15Odds}) below minimum (${minOdds})`);
+    } else if (mp.pOver15 >= PROB_MEDIUM) {
+      picks.push({
+        market: 'Over 1.5 Total Goals', display: `Over 1.5 Goals`, conf: probConf(mp.pOver15), odds: estOver15Odds || null,
+        betType: estOver15Odds >= 1.80 ? 'single' : 'acca',
+        reasons: [`Model probability: ${pct(mp.pOver15)}%`, expGoalsStr]
+      });
+    } else {
+      rejections.push(`Over 1.5: Model probability too low (${pct(mp.pOver15)}%)`);
+    }
+  }
+
+  if (filters.over25) {
+    if (over25Odds && over25Odds < minOdds) {
+      rejections.push(`Over 2.5: Odds (${over25Odds}) below minimum (${minOdds})`);
+    } else if (mp.pOver25 >= PROB_MEDIUM) {
+      picks.push({
+        market: 'Over 2.5 Total Goals', display: `Over 2.5 Goals`, conf: probConf(mp.pOver25), odds: over25Odds || null,
+        betType: over25Odds >= 1.80 ? 'single' : 'acca',
+        reasons: [`Model probability: ${pct(mp.pOver25)}%`, expGoalsStr]
+      });
+    } else {
+      rejections.push(`Over 2.5: Model probability too low (${pct(mp.pOver25)}%)`);
+    }
+  }
+
+  if (filters.over35) {
+    if (over35Odds && over35Odds < minOdds) {
+      rejections.push(`Over 3.5: Odds (${over35Odds}) below minimum (${minOdds})`);
+    } else if (mp.pOver35 >= PROB_MEDIUM) {
+      picks.push({
+        market: 'Over 3.5 Total Goals', display: `Over 3.5 Goals`, conf: probConf(mp.pOver35), odds: over35Odds || null, betType: 'single',
+        reasons: [`Model probability: ${pct(mp.pOver35)}%`, expGoalsStr]
+      });
+    } else {
+      rejections.push(`Over 3.5: Model probability too low (${pct(mp.pOver35)}%)`);
+    }
+  }
+
+  // F. Handicap -- keep the "big favorite / big underdog" gate (the tool's
+  // core strategy), but pick the safety line and grade confidence from the
+  // true Poisson probability of it covering, instead of ad-hoc avgConceded checks.
+  if (filters.handicap) {
+    let fav = homeOdds <= awayOdds ? { t: match.home_team, odds: homeOdds } : { t: match.away_team, odds: awayOdds };
+    let dog = homeOdds > awayOdds ? { t: match.home_team, odds: homeOdds, isHome: true } : { t: match.away_team, odds: awayOdds, isHome: false };
+
+    if (fav.odds <= 1.35 && dog.odds >= 5.00) {
+      const candidateLines = [3.0, 3.5, 4.0];
+      let chosen = null;
+      for (const line of candidateLines) {
+        const p = mp.handicapCoverProb(line, dog.isHome);
+        if (p >= 0.90) { chosen = { line, p }; break; }
+      }
+      if (!chosen) {
+        chosen = { line: 4.0, p: mp.handicapCoverProb(4.0, dog.isHome) };
+      }
+      const conf = chosen.p >= 0.95 ? 'high' : chosen.p >= 0.90 ? 'medium' : 'low';
+      picks.push({
+        market: 'Handicap', display: `${dog.t} Handicap +${chosen.line.toFixed(1)}`, conf, odds: null, betType: 'acca',
+        reasons: [`Model probability of covering: ${pct(chosen.p)}%`, expGoalsStr, `Favorite odds: ${fav.odds}`]
+      });
+    } else {
+      rejections.push(`Handicap: Favorite odds (${fav.odds}) too high or Underdog odds (${dog.odds}) too low`);
+    }
+  }
+
+  // Team Over 1.5 / 2.5 Goals (no dedicated market odds -- probability bar only)
+  if (filters.teamOver15) {
+    let picked = false;
+    [{ t: match.home_team, p: mp.pHomeOver15 }, { t: match.away_team, p: mp.pAwayOver15 }].forEach(team => {
+      if (team.p >= PROB_MEDIUM) {
+        picks.push({
+          market: 'Team Over 1.5 Goals', display: `${team.t} Over 1.5 Goals`, conf: probConf(team.p), odds: null, betType: 'acca',
+          reasons: [`Model probability: ${pct(team.p)}%`, expGoalsStr]
+        });
+        picked = true;
+      } else {
+        rejections.push(`Team Over 1.5: ${team.t} model probability too low (${pct(team.p)}%)`);
+      }
+    });
+    if (!picked && rejections.filter(r => r.startsWith("Team Over 1.5")).length === 0) {
+      rejections.push(`Team Over 1.5: Criteria not met for either team`);
+    }
+  }
+
+  // OFF by default. Backtesting showed this market rarely even reaches the
+  // "low" confidence bar (0.55), and when it does, it wins only 48.4% of
+  // the time -- worse than the bar it nominally cleared. A team scoring 3+
+  // in a single match is too rare an event for a 6-game rolling average to
+  // estimate reliably; no threshold tested actually rescued it.
+  if (filters.teamOver25) {
+    rejections.push(`Team Over 2.5: Model has no reliable signal for this market (see backtest notes) -- skipped`);
+  }
+
+  // G. Double Chance (1X, X2, 12) -- higher bar since it inherently covers 2 of 3 outcomes
+  if (filters.doubleChance) {
+    let picked = false;
+    const DC_HIGH = 0.82, DC_MED = 0.75, DC_LOW = 0.68;
+    const dcConf = (p) => p >= DC_HIGH ? 'high' : p >= DC_MED ? 'medium' : 'low';
+    const p1X = mp.pHomeWin + mp.pDraw, pX2 = mp.pAwayWin + mp.pDraw, p12 = 1 - mp.pDraw;
+
+    if (p1X >= DC_LOW) {
+      picks.push({ market: 'Double Chance 1X', display: `Double Chance 1X (Home/Draw)`, conf: dcConf(p1X), odds: null, betType: 'acca', reasons: [`Model probability: ${pct(p1X)}%`, expGoalsStr] });
+      picked = true;
+    } else rejections.push(`Double Chance 1X: Model probability too low (${pct(p1X)}%)`);
+
+    if (pX2 >= DC_LOW) {
+      picks.push({ market: 'Double Chance X2', display: `Double Chance X2 (Away/Draw)`, conf: dcConf(pX2), odds: null, betType: 'acca', reasons: [`Model probability: ${pct(pX2)}%`, expGoalsStr] });
+      picked = true;
+    } else rejections.push(`Double Chance X2: Model probability too low (${pct(pX2)}%)`);
+
+    if (p12 >= DC_LOW) {
+      picks.push({ market: 'Double Chance 12', display: `Double Chance 12 (Home/Away)`, conf: dcConf(p12), odds: null, betType: 'acca', reasons: [`Model probability: ${pct(p12)}%`, expGoalsStr] });
+      picked = true;
+    } else rejections.push(`Double Chance 12: Model probability too low (${pct(p12)}%)`);
+
+    if (!picked) rejections.push(`Double Chance: No outcome cleared the ${pct(DC_LOW)}% probability bar`);
+  }
+
+  // H. Team to Score (Over 0.5 Goals) -- no dedicated market odds, probability bar only
+  if (filters.teamOver05) {
+    let picked = false;
+    [{ t: match.home_team, p: mp.pHomeOver05 }, { t: match.away_team, p: mp.pAwayOver05 }].forEach(team => {
+      if (team.p >= PROB_HIGH) {
+        picks.push({
+          market: 'Team to Score (Over 0.5)', display: `${team.t} to Score (Over 0.5)`, conf: probConf(team.p), odds: null, betType: 'acca',
+          reasons: [`Model probability: ${pct(team.p)}%`, expGoalsStr]
+        });
+        picked = true;
+      } else {
+        rejections.push(`Team to Score (Over 0.5): ${team.t} model probability too low (${pct(team.p)}%)`);
+      }
+    });
+    if (!picked && rejections.filter(r => r.startsWith("Team to Score")).length === 0) {
+      rejections.push(`Team to Score (Over 0.5): Criteria not met for either team`);
+    }
+  }
+
+  // I. Corners
+  if (filters.corners) {
+    let picked = false;
+    const combinedAvg = parseFloat(homeForm.avgScored) + parseFloat(homeForm.avgConceded) + parseFloat(awayForm.avgScored) + parseFloat(awayForm.avgConceded);
+    const avgMatchGoals = combinedAvg / 2;
+
+    [{ t: match.home_team, f: homeForm, oppF: awayForm },
+     { t: match.away_team, f: awayForm, oppF: homeForm }].forEach(team => {
+      const scoreDiff = parseFloat(team.f.avgScored) - parseFloat(team.oppF.avgScored);
+
+      if (scoreDiff >= 0.5 && team.f.winRate >= 0.50) {
+        picks.push({
+          market: 'Corners Winner', display: `${team.t} to win Corners`, conf: 'medium', odds: null, betType: 'acca',
+          reasons: [`Attacking Proxy Model (dominant attack, win rate: ${Math.round(team.f.winRate * 100)}%, avg scored: ${team.f.avgScored} vs opponent avg: ${team.oppF.avgScored})`]
+        });
+        picked = true;
+      }
+
+      if (parseFloat(team.f.avgScored) >= 2.0) {
+        picks.push({
+          market: 'Team Over 5.5 Corners', display: `${team.t} Over 5.5 Corners`, conf: 'medium', odds: null, betType: 'single',
+          reasons: [`Attacking Proxy Model (highly offensive team, averages ${team.f.avgScored} goals/game)`]
+        });
+        picked = true;
+      } else if (parseFloat(team.f.avgScored) >= 1.5 && team.f.scoringRate >= 0.66) {
+        picks.push({
+          market: 'Team Over 4.5 Corners', display: `${team.t} Over 4.5 Corners`, conf: 'medium', odds: null, betType: 'acca',
+          reasons: [`Attacking Proxy Model (active attacking team, averages ${team.f.avgScored} goals/game)`]
+        });
+        picked = true;
+      }
+    });
+
+    if (avgMatchGoals >= 3.0 && homeForm.scoringRate >= 0.66 && awayForm.scoringRate >= 0.66) {
+      picks.push({
+        market: 'Over 9.5 Corners', display: `Over 9.5 Corners`, conf: 'medium', odds: null, betType: 'single',
+        reasons: [`Attacking Proxy Model (high shooting frequency, combined match goals avg: ${avgMatchGoals.toFixed(2)})`]
+      });
+      picked = true;
+    } else if (avgMatchGoals >= 2.5) {
+      picks.push({
+        market: 'Over 8.5 Corners', display: `Over 8.5 Corners`, conf: 'medium', odds: null, betType: 'acca',
+        reasons: [`Attacking Proxy Model (consistent attacking match, combined match goals avg: ${avgMatchGoals.toFixed(2)})`]
+      });
+      picked = true;
+    }
+    
+    if (!picked) {
+      rejections.push(`Corners: Skip (Attacking metrics below corner thresholds for winner, team overs, and match totals)`);
+    }
+  }
+
+  return { picks, rejections };
+};
+
+const getFormClasses = (val, type) => {
+  let v = parseFloat(val);
+  if (type === 'scored') {
+    return v >= 1.5 ? 'good' : (v >= 0.8 ? 'ok' : 'bad');
+  }
+  if (type === 'conceded') {
+    return v <= 1.0 ? 'good' : (v <= 2.0 ? 'ok' : 'bad');
+  }
+  if (type === 'cs') return v >= 2 ? 'good' : (v >= 1 ? 'ok' : 'bad');
+  if (type === 'win') return v >= 0.6 ? 'good' : (v >= 0.4 ? 'ok' : 'bad');
+  return '';
+};
+
+const generateTeamFormHTML = (teamName, odds, form) => {
+  if (!form) {
+    return `<div class="team-col">
+              <div class="team-name"><span>${teamName}</span>${odds ? `<span class="h2h-odds">${odds}</span>` : ''}</div>
+              <div class="form-stats" style="color: var(--muted); text-align: center; padding: 2rem 0;">No ESPN form data found</div>
+            </div>`;
+  }
+
+  const dotsHtml = form.record.map(r => `<div class="result-dot ${r}">${r}</div>`).join('');
+  
+  return `<div class="team-col">
+            <div class="team-name"><span>${teamName}</span>${odds ? `<span class="h2h-odds">${odds}</span>` : ''}</div>
+            <div class="form-stats">
+              <div class="form-row"><span class="form-label">Last ${form.played}</span><div class="last-6">${dotsHtml}</div></div>
+              <div class="form-row"><span class="form-label">Avg Scored</span><span class="form-value ${getFormClasses(form.avgScored, 'scored')}">${form.avgScored}</span></div>
+              <div class="form-row"><span class="form-label">Avg Conceded</span><span class="form-value ${getFormClasses(form.avgConceded, 'conceded')}">${form.avgConceded}</span></div>
+              <div class="form-row"><span class="form-label">Clean Sheets</span><span class="form-value ${getFormClasses(form.cleanSheets, 'cs')}">${form.cleanSheets} / ${form.played}</span></div>
+              <div class="form-row"><span class="form-label">Win Rate</span><span class="form-value ${getFormClasses(form.winRate, 'win')}">${Math.round(form.winRate * 100)}%</span></div>
+            </div>
+          </div>`;
+};
+
+// Pure function: given a pick + the final score, decide WON/LOST/PENDING.
+// Shared by the live scan resolver and the Track Record "Resolve Pending" pass.
+const computePickStatus = (p, homeTeam, awayTeam, hScore, aScore) => {
+  const m = p.market;
+
+  if (['Corners Winner', 'Over 8.5 Corners', 'Over 9.5 Corners', 'Team Over 4.5 Corners', 'Team Over 5.5 Corners'].includes(m)) {
+    return 'PENDING (Manual Verify)';
+  }
+
+  let status = 'LOST';
+
+  if (m === 'Match Winner') {
+    if (p.display.includes(homeTeam) && hScore > aScore) status = 'WON';
+    else if (p.display.includes(awayTeam) && aScore > hScore) status = 'WON';
+  }
+  else if (m === 'Draw') {
+    if (hScore === aScore) status = 'WON';
+  }
+  else if (m === 'Both Teams to Score') {
+    if (hScore > 0 && aScore > 0) status = 'WON';
+  }
+  else if (m === 'GG & Over 2.5') {
+    if (hScore > 0 && aScore > 0 && hScore + aScore >= 3) status = 'WON';
+  }
+  else if (m === 'Over 1.5 Total Goals') {
+    if (hScore + aScore >= 2) status = 'WON';
+  }
+  else if (m === 'Over 2.5 Total Goals') {
+    if (hScore + aScore >= 3) status = 'WON';
+  }
+  else if (m === 'Over 3.5 Total Goals') {
+    if (hScore + aScore >= 4) status = 'WON';
+  }
+  else if (m === 'Team Over 1.5 Goals') {
+    if (p.display.includes(homeTeam) && hScore >= 2) status = 'WON';
+    else if (p.display.includes(awayTeam) && aScore >= 2) status = 'WON';
+  }
+  else if (m === 'Team Over 2.5 Goals') {
+    if (p.display.includes(homeTeam) && hScore >= 3) status = 'WON';
+    else if (p.display.includes(awayTeam) && aScore >= 3) status = 'WON';
+  }
+  else if (m === 'Handicap') {
+    const matchArr = p.display.match(/Handicap \+([\d\.]+)/);
+    if (matchArr) {
+      const line = parseFloat(matchArr[1]);
+      const isHome = p.display.includes(homeTeam);
+      let dogScore = isHome ? hScore : aScore;
+      let favScore = isHome ? aScore : hScore;
+      if (dogScore + line > favScore) status = 'WON';
+    } else {
+      status = 'PENDING';
+    }
+  }
+  else if (m === 'Double Chance 1X') {
+    if (hScore >= aScore) status = 'WON';
+  }
+  else if (m === 'Double Chance X2') {
+    if (aScore >= hScore) status = 'WON';
+  }
+  else if (m === 'Double Chance 12') {
+    if (hScore !== aScore) status = 'WON';
+  }
+  else if (m === 'Team to Score (Over 0.5)') {
+    if (p.display.includes(homeTeam) && hScore >= 1) status = 'WON';
+    else if (p.display.includes(awayTeam) && aScore >= 1) status = 'WON';
+  }
+
+  return status;
+};
+
+const resolveMatchResult = async (match, espnSlug, homeId, awayId) => {
+  if (new Date(match.raw.commence_time) >= new Date()) return;
+
+  let hScore = null, aScore = null;
+
+  let events = null;
+  if (homeId) {
+    events = await fetchESPNSchedule(homeId, espnSlug);
+  }
+  if (events) {
+    const matchDate = new Date(match.raw.commence_time).toISOString().split('T')[0];
+    const ev = events.find(e => e.date.startsWith(matchDate) || e.date.startsWith(new Date(new Date(matchDate).getTime() - 86400000).toISOString().split('T')[0]));
+    if (ev && (ev.competitions[0].status.type.name.includes('FINAL') || ev.competitions[0].status.type.name.includes('FULL'))) {
+      const c1 = ev.competitions[0].competitors[0];
+      const c2 = ev.competitions[0].competitors[1];
+      if (c1.id === homeId) { hScore = getScore(c1); aScore = getScore(c2); }
+      else { aScore = getScore(c1); hScore = getScore(c2); }
+      match.actualResult = { home: hScore, away: aScore, display: `${hScore} - ${aScore}` };
+    }
+  }
+
+  // Resolve picks
+  if (match.actualResult) {
+    match.picks.forEach(p => {
+      p.status = computePickStatus(p, match.raw.home_team, match.raw.away_team, hScore, aScore);
+    });
+  } else {
+    match.picks.forEach(p => p.status = 'PENDING');
+  }
+};
+
+let trackingAvailable = true;
+let trackingWarned = false;
+
+const logPicksToServer = async (mObj, espnSlug, homeEspnId, awayEspnId, lg) => {
+  if (!trackingAvailable) return;
+  try {
+    const payload = {
+      matches: [{
+        match_date: mObj.raw.commence_time,
+        league: mObj.raw.sport_title || lg?.name || mObj.raw.sport_key,
+        home_team: mObj.raw.home_team,
+        away_team: mObj.raw.away_team,
+        espn_slug: espnSlug || null,
+        home_espn_id: homeEspnId || null,
+        away_espn_id: awayEspnId || null,
+        actual_home: mObj.actualResult ? mObj.actualResult.home : null,
+        actual_away: mObj.actualResult ? mObj.actualResult.away : null,
+        picks: mObj.picks.map(p => ({
+          market: p.market, display: p.display, conf: p.conf, odds: p.odds, betType: p.betType, status: p.status
+        }))
+      }]
+    };
+    const res = await fetch('/api/log-picks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (e) {
+    trackingAvailable = false;
+    if (!trackingWarned) {
+      trackingWarned = true;
+      console.warn('Prediction tracking unavailable (is server.py running? are you on http://localhost:8888?):', e);
+    }
+  }
+};
+
+const renderMatches = () => {
+  const container = qs('#matches-container');
+  if (globalMatches.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">No Recommendations</div><p>Scan completed, but no matches fit the strict criteria.<br>Try adjusting the date range or filters.</p></div>`;
+    return;
+  }
+
+  let html = '';
+  globalMatches.forEach((m, idx) => {
+    const filteredPicks = m.picks.filter(p => currentBetTypeFilter === 'all' || p.betType === currentBetTypeFilter);
+    
+    if (filteredPicks.length === 0) {
+      const hideEmpty = document.getElementById('m-hide-empty')?.checked;
+      if (hideEmpty) return;
+    }
+
+    const hasHigh = filteredPicks.some(p => p.conf === 'high');
+    
+    let homeOdds = '-', drawOdds = '-', awayOdds = '-';
+    if (m.raw.bookmakers && m.raw.bookmakers[0]) {
+      const h2h = m.raw.bookmakers[0].markets.find(mk => mk.key === 'h2h');
+      if (h2h) {
+        h2h.outcomes.forEach(o => {
+          if (o.name === m.raw.home_team) homeOdds = o.price.toFixed(2);
+          else if (o.name === 'Draw') drawOdds = o.price.toFixed(2);
+          else awayOdds = o.price.toFixed(2);
+        });
+      }
+    }
+
+    const date = new Date(m.raw.commence_time);
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + date.toLocaleDateString();
+    const leagueInfo = LEAGUES.find(l => l.key === m.raw.sport_key) || { name: m.raw.sport_title || m.raw.sport_key, flag: '⚽' };
+
+    const picksHtml = filteredPicks.map(p => {
+      let badge = '';
+      if (p.status === 'WON') badge = '<span style="background:var(--green);color:#000;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">🎉 WON</span>';
+      else if (p.status === 'LOST') badge = '<span style="background:var(--red);color:#000;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">❌ LOST</span>';
+      else if (p.status) badge = `<span style="background:var(--muted);color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">⏳ ${p.status}</span>`;
+      
+      const oddsStr = p.odds ? ` @ ${p.odds}` : '';
+      const prefix = p.betType === 'single' ? '🎯 Single' : '🔗 Acca';
+      const displayText = `${prefix} | ${p.display}${oddsStr}`;
+      
+      return `<div class="pick-pill ${p.betType}">${displayText} ${badge}</div>`;
+    }).join('');
+    
+    const analysisHtml = filteredPicks.map(p => `
+      <div class="market-reason-group">
+        <div class="market-reason-title">${p.display}</div>
+        <ul>${p.reasons.map(r => `<li>${r}</li>`).join('')}</ul>
+      </div>
+    `).join('');
+
+    let resultHtml = '';
+    if (m.actualResult) {
+      resultHtml = `<div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); display: inline-block;">
+        <strong style="color: var(--yellow)">Final Score:</strong> ${m.actualResult.display}
+      </div>`;
+    }
+
+    html += `
+      <div class="match-card ${hasHigh ? 'has-high' : ''} ${filteredPicks.length === 0 ? 'rejected' : ''}">
+        <div class="match-header">
+          <div class="match-teams"><span>${m.raw.home_team}</span><span class="vs">VS</span><span>${m.raw.away_team}</span></div>
+          <div class="match-meta">
+            <span class="league-badge">${leagueInfo.flag} ${leagueInfo.name}</span>
+            <span>⏰ ${timeStr}</span>
+          </div>
+        </div>
+        <div class="match-body">
+          ${resultHtml}
+          <div class="form-data-grid">
+            ${generateTeamFormHTML(m.raw.home_team, homeOdds, m.homeForm)}
+            ${generateTeamFormHTML(m.raw.away_team, awayOdds, m.awayForm)}
+          </div>
+          <div class="picks-container">
+            <div class="picks-title">AI Recommendations (${filteredPicks.length})</div>
+            ${filteredPicks.length === 0 ? '<span style="background:var(--muted);color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">⚠️ No Picks Met Safety Thresholds</span>' : ''}
+            ${m.rejections && m.rejections.length > 0 ? `
+              <div style="margin-top: 1rem;">
+                <button class="analysis-toggle" onclick="document.getElementById('rejections-${idx}').classList.toggle('open')">📋 View Scan Rejections (${m.rejections.length})</button>
+                <div class="rejections-details" id="rejections-${idx}">
+                  <ul>${m.rejections.map(r => `<li>${r}</li>`).join('')}</ul>
+                </div>
+              </div>
+            ` : ''}
+            <div class="picks-row">${picksHtml}</div>
+            <button class="analysis-toggle" onclick="document.getElementById('analysis-${idx}').classList.toggle('open')">📊 View Analysis Details</button>
+            <div class="analysis-details" id="analysis-${idx}">${analysisHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  if(qs('#btn-export')) qs('#btn-export').style.display = 'block';
+};
+
+const fetchTeamScheduleGlobally = async (teamName) => {
+  try {
+    const searchRes = await fetch(`/espn-search/?query=${encodeURIComponent(teamName)}&limit=5&type=team`);
+    const searchData = await searchRes.json();
+    if (!searchData || !searchData.contents) return null;
+    
+    const item = searchData.contents.find(i => i.link && i.link.web && i.link.web.includes('/football/club/'));
+    if (!item) return null;
+    
+    const parts = item.link.web.split('id/');
+    if (parts.length < 2) return null;
+    const teamId = parts[1].split('/')[0];
+    
+    const profileRes = await fetch(`/espn/soccer/teams/${teamId}`);
+    const profileData = await profileRes.json();
+    
+    let leagueSlug = 'club.friendly';
+    try {
+      const defaultLeagueLink = profileData.teamInfo?.defaultLeague?.links?.[0]?.href;
+      if (defaultLeagueLink) {
+        const lp = defaultLeagueLink.split('name/');
+        if (lp.length > 1) {
+          leagueSlug = lp[1].split('/')[0];
+        }
+      }
+    } catch(e) {}
+    
+    const year = new Date().getFullYear();
+    const schedRes = await fetch(`/espn/soccer/${leagueSlug}/teams/${teamId}/schedule?season=${year}`);
+    const schedData = await schedRes.json();
+    let events = schedData.events || [];
+    
+    if (events.length < 10) {
+      const prevSchedRes = await fetch(`/espn/soccer/${leagueSlug}/teams/${teamId}/schedule?season=${year - 1}`);
+      if (prevSchedRes.ok) {
+        const prevSchedData = await prevSchedRes.json();
+        if (prevSchedData.events) {
+          events = [...(prevSchedData.events || []), ...events];
+        }
+      }
+    }
+    
+    return { events, teamId, leagueSlug };
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
+};
+
+const mainScan = async () => {
+  const apiKey = qs('#api-key').value.trim();
+  if (!apiKey) { alert("Please enter your The Odds API key"); return; }
+  
+  try {
+    const sportsRes = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}`);
+    if (!sportsRes.ok) throw new Error("Failed to fetch active sports");
+    const sportsData = await sportsRes.json();
+    const dynamicLeagues = sportsData.filter(s => s.key.startsWith('soccer_') && s.active);
+    if (dynamicLeagues.length > 0) {
+      LEAGUES = dynamicLeagues.map(s => ({ key: s.key, name: s.title, flag: '⚽' }));
+    }
+  } catch(e) {
+    alert("Odds API Error: Failed to fetch active sports. Check your API key.");
+    return;
+  }
+  
+  const startD = qs('#start-date').value;
+  const endD = qs('#end-date').value;
+  if (!startD || !endD) return;
+  
+  const region = qs('#region-select').value;
+  
+  const filters = {
+    minOdds: parseFloat(qs('#min-odds')?.value || 1.20),
+    matchWinner: qs('#m-match-winner')?.checked ?? true,
+    draw: qs('#m-draw')?.checked ?? true,
+    gg: qs('#m-gg')?.checked ?? true,
+    ggOver25: qs('#m-gg-over-25')?.checked ?? true,
+    over15: qs('#m-over-15')?.checked ?? true,
+    over25: qs('#m-over-25')?.checked ?? true,
+    over35: qs('#m-over-35')?.checked ?? true,
+    teamOver15: qs('#m-team-over-15')?.checked ?? true,
+    teamOver25: qs('#m-team-over-25')?.checked ?? true,
+    handicap: qs('#m-handicap')?.checked ?? true,
+    doubleChance: qs('#m-double-chance')?.checked ?? true,
+    teamOver05: qs('#m-team-over-05')?.checked ?? true,
+    corners: qs('#m-corners')?.checked ?? true
+  };
+
+  isScanning = true;
+  qs('#btn-scan').disabled = true;
+  qs('#btn-scan').innerHTML = `Scanning...`;
+  qs('#matches-container').innerHTML = '';
+  if(qs('#btn-export')) qs('#btn-export').style.display = 'none';
+  
+  let stats = { leagues: 0, matches: 0, formLoaded: 0, picks: 0, high: 0 };
+  updateStats(0, 0, 0, 0, 0);
+  globalMatches = [];
+
+  try {
+    for (const lg of LEAGUES) {
+      if (!isScanning) break;
+      setStatus(`Scanning odds for ${lg.name}...`);
+      stats.leagues++;
+      updateStats(stats.leagues, null, null, null, null);
+      
+      const startISO = `${startD}T00:00:00Z`;
+      const endISO = new Date(new Date(endD + 'T23:59:59Z').getTime() + 6 * 60 * 60 * 1000).toISOString().split('.')[0] + 'Z';
+      const url = `https://api.the-odds-api.com/v4/sports/${lg.key}/odds/?apiKey=${apiKey}&regions=${region}&markets=h2h,totals&dateFormat=iso&oddsFormat=decimal&commenceTimeFrom=${startISO}&commenceTimeTo=${endISO}`;
+      let res;
+      try { res = await fetch(url); } catch(e) { console.error(e); continue; }
+      if (!res.ok) {
+        let errMsg = "API Error";
+        try {
+          const errData = await res.json();
+          errMsg = errData.message || errMsg;
+        } catch(e) {}
+        
+        if (res.status === 401 || res.status === 429 || res.status === 403) {
+          setStatus(`Error: ${errMsg} (Status: ${res.status})`, false);
+          alert(`Odds API Error: ${errMsg} (Status: ${res.status})\nScan stopped.`);
+          isScanning = false;
+          qs('#btn-scan').disabled = false;
+          qs('#btn-scan').innerHTML = `Scan + Analyse`;
+          return;
+        } else {
+          console.warn(`Skipping ${lg.name}: ${errMsg} (Status: ${res.status})`);
+          continue;
+        }
+      }
+      const matches = await res.json();
+      if (!matches || matches.length === 0) { await sleep(150); continue; }
+      
+      stats.matches += matches.length;
+      updateStats(null, stats.matches, null, null, null);
+
+      let espnSlug = getEspnSlug(lg.key);
+      let espnTeams = [];
+      
+      if (espnSlug) {
+        setStatus(`Fetching ESPN teams for ${lg.name}...`);
+        espnTeams = await fetchESPNTeams(espnSlug);
+        await sleep(200);
+      }
+
+      for (const match of matches) {
+        if (!isScanning) break;
+        setStatus(`Analyzing: ${match.home_team} vs ${match.away_team}`);
+        
+        let homeForm = null, awayForm = null;
+        let homeEspnId = null, awayEspnId = null;
+        
+        homeEspnId = espnTeams.length > 0 ? fuzzyMatchTeam(match.home_team, espnTeams) : null;
+        if (homeEspnId) {
+          const s = await fetchESPNSchedule(homeEspnId, espnSlug);
+          homeForm = processForm(s, homeEspnId);
+        }
+        if (!homeForm) {
+          const fallback = await fetchTeamScheduleGlobally(match.home_team);
+          if (fallback) {
+            homeEspnId = fallback.teamId;
+            homeForm = processForm(fallback.events, homeEspnId);
+          }
+        }
+        await sleep(200);
+
+        awayEspnId = espnTeams.length > 0 ? fuzzyMatchTeam(match.away_team, espnTeams) : null;
+        if (awayEspnId) {
+          const s = await fetchESPNSchedule(awayEspnId, espnSlug);
+          awayForm = processForm(s, awayEspnId);
+        }
+        if (!awayForm) {
+          const fallback = await fetchTeamScheduleGlobally(match.away_team);
+          if (fallback) {
+            awayEspnId = fallback.teamId;
+            awayForm = processForm(fallback.events, awayEspnId);
+          }
+        }
+        await sleep(200);
+
+        if (!homeForm || !awayForm) {
+          console.warn(`Discarding match ${match.home_team} vs ${match.away_team} because ESPN form data is missing for at least one team.`);
+          continue;
+        }
+
+        stats.formLoaded += 2;
+        updateStats(null, null, stats.formLoaded, null, null);
+        
+        const { picks, rejections } = analyzeMatch(match, homeForm, awayForm, filters);
+        
+        stats.picks += picks.length;
+        stats.high += picks.filter(p => p.conf === 'high').length;
+        updateStats(null, null, null, stats.picks, stats.high);
+        
+        let mObj = { raw: match, homeForm, awayForm, picks, rejections };
+        await resolveMatchResult(mObj, espnSlug, homeEspnId, awayEspnId);
+        globalMatches.push(mObj);
+        if (picks.length > 0) logPicksToServer(mObj, espnSlug, homeEspnId, awayEspnId, lg);
+      }
+      await sleep(150);
+    }
+    
+    globalMatches.sort((a, b) => {
+      if (b.picks.length !== a.picks.length) return b.picks.length - a.picks.length;
+      return b.picks.filter(p => p.conf === 'high').length - a.picks.filter(p => p.conf === 'high').length;
+    });
+
+    setStatus(`Scan complete. Found ${globalMatches.length} matches with recommendations.`, false);
+    renderMatches();
+    
+  } catch (err) {
+    console.error(err);
+    setStatus("An error occurred during scan.", false);
+    alert("Scan stopped due to an error. Check console.");
+  } finally {
+    isScanning = false;
+    qs('#btn-scan').disabled = false;
+    qs('#btn-scan').innerHTML = `Scan + Analyse`;
+  }
+};
+
+const exportCsv = () => {
+  if (globalMatches.length === 0) return;
+  let csv = 'Home,Away,League,Kickoff,Home Odds,Draw Odds,Away Odds,Market,Pick,Bet Type,Confidence,Status,Result,Reasoning,Home Form,Away Form\n';
+  
+  globalMatches.forEach(m => {
+    if (!m.picks || m.picks.length === 0) return;
+    let homeOdds = '', drawOdds = '', awayOdds = '';
+    if (m.raw.bookmakers?.[0]) {
+      const h2h = m.raw.bookmakers[0].markets.find(mk => mk.key === 'h2h');
+      if (h2h) {
+        h2h.outcomes.forEach(o => {
+          if (o.name === m.raw.home_team) homeOdds = o.price;
+          else if (o.name === 'Draw') drawOdds = o.price;
+          else awayOdds = o.price;
+        });
+      }
+    }
+    
+    const date = new Date(m.raw.commence_time).toISOString();
+    const lg = m.raw.sport_title || m.raw.sport_key;
+    const finalScore = m.actualResult ? m.actualResult.display : '';
+    
+    let hF = m.homeForm ? `Scored: ${m.homeForm.avgScored} Conceded: ${m.homeForm.avgConceded}` : '';
+    let aF = m.awayForm ? `Scored: ${m.awayForm.avgScored} Conceded: ${m.awayForm.avgConceded}` : '';
+    
+    m.picks.forEach(p => {
+      const reasonsStr = p.reasons.join('; ').replace(/"/g, '""');
+      const bType = p.betType === 'single' ? 'Single' : 'Acca';
+      csv += `"${m.raw.home_team}","${m.raw.away_team}","${lg}","${date}","${homeOdds}","${drawOdds}","${awayOdds}","${p.market}","${p.display}","${bType}","${p.conf}","${p.status || ''}","${finalScore}","${reasonsStr}","${hF}","${aF}"\n`;
+    });
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `sportybet_football_picks_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+qs('#btn-scan').addEventListener('click', mainScan);
+if(qs('#btn-export')) qs('#btn-export').addEventListener('click', exportCsv);
+if(qs('#m-hide-empty')) qs('#m-hide-empty').addEventListener('change', renderMatches);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentBetTypeFilter = e.target.getAttribute('data-filter');
+    renderMatches();
+  });
+});
+
+// ============ Track Record ============
+let trFullPredictions = [];
+
+const switchView = (view) => {
+  qs('#view-scanner').style.display = view === 'scanner' ? '' : 'none';
+  qs('#view-trackrecord').style.display = view === 'trackrecord' ? '' : 'none';
+  qs('#tab-scanner').classList.toggle('active', view === 'scanner');
+  qs('#tab-trackrecord').classList.toggle('active', view === 'trackrecord');
+  if (view === 'trackrecord') loadTrackRecord();
+};
+
+const setTrStatus = (msg) => { if (qs('#tr-status')) qs('#tr-status').textContent = msg; };
+const fmtPct = (v) => (v === null || v === undefined) ? '–' : `${v}%`;
+
+const renderBreakdownTable = (tableEl, groups, labelHeader) => {
+  const rows = Object.entries(groups || {});
+  if (rows.length === 0) {
+    tableEl.innerHTML = `<tr><td style="color:var(--muted)">No data yet</td></tr>`;
+    return;
+  }
+  let html = `<thead><tr><th>${labelHeader}</th><th>Picks</th><th>W</th><th>L</th><th>Pend.</th><th>Win %</th></tr></thead><tbody>`;
+  rows.forEach(([name, s]) => {
+    html += `<tr>
+      <td>${name}</td>
+      <td>${s.total}</td>
+      <td class="tr-win">${s.won}</td>
+      <td class="tr-loss">${s.lost}</td>
+      <td class="tr-pending">${s.pending}</td>
+      <td>${fmtPct(s.win_rate)}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  tableEl.innerHTML = html;
+};
+
+const renderPredictionLog = () => {
+  const filter = qs('#tr-filter-status').value;
+  const rows = !filter ? trFullPredictions
+    : filter === 'PENDING' ? trFullPredictions.filter(r => r.status !== 'WON' && r.status !== 'LOST')
+    : trFullPredictions.filter(r => r.status === filter);
+  const tableEl = qs('#tr-table-log');
+  if (rows.length === 0) {
+    tableEl.innerHTML = `<tr><td style="color:var(--muted)">No predictions logged yet. Run a scan with the local server running (python server.py).</td></tr>`;
+    return;
+  }
+  let html = `<thead><tr><th>Match Date</th><th>League</th><th>Match</th><th>Market</th><th>Pick</th><th>Conf.</th><th>Odds</th><th>Result</th><th>Status</th></tr></thead><tbody>`;
+  rows.forEach(r => {
+    const d = new Date(r.match_date);
+    const dateStr = isNaN(d) ? r.match_date : d.toLocaleDateString();
+    let statusClass = 'pending';
+    if (r.status === 'WON') statusClass = 'won';
+    else if (r.status === 'LOST') statusClass = 'lost';
+    const score = (r.actual_home !== null && r.actual_home !== undefined) ? `${r.actual_home}-${r.actual_away}` : '–';
+    html += `<tr>
+      <td>${dateStr}</td>
+      <td>${r.league || '–'}</td>
+      <td>${r.home_team} vs ${r.away_team}</td>
+      <td>${r.market}</td>
+      <td>${r.display}</td>
+      <td>${r.confidence || '–'}</td>
+      <td>${r.odds || '–'}</td>
+      <td>${score}</td>
+      <td><span class="status-pill ${statusClass}">${r.status}</span></td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  tableEl.innerHTML = html;
+};
+
+const loadTrackRecord = async () => {
+  setTrStatus('Loading...');
+  try {
+    const [statsRes, predsRes] = await Promise.all([
+      fetch('/api/stats'),
+      fetch('/api/predictions?limit=1000')
+    ]);
+    if (!statsRes.ok || !predsRes.ok) throw new Error('Server not reachable');
+    const stats = await statsRes.json();
+    trFullPredictions = await predsRes.json();
+
+    qs('#tr-total').textContent = stats.overall.total;
+    qs('#tr-resolved').textContent = stats.overall.resolved;
+    qs('#tr-pending').textContent = stats.overall.pending;
+    qs('#tr-winrate').textContent = fmtPct(stats.overall.win_rate);
+    qs('#tr-roi').textContent = stats.overall.roi_pct === null ? '–' : `${stats.overall.roi_pct > 0 ? '+' : ''}${stats.overall.roi_pct}%`;
+
+    renderBreakdownTable(qs('#tr-table-market'), stats.by_market, 'Market');
+    renderBreakdownTable(qs('#tr-table-confidence'), stats.by_confidence, 'Confidence');
+    renderBreakdownTable(qs('#tr-table-league'), stats.by_league, 'League');
+    renderPredictionLog();
+
+    setTrStatus(`Last loaded: ${new Date().toLocaleTimeString()}`);
+  } catch (e) {
+    console.error(e);
+    setTrStatus('⚠️ Could not reach the local server. Make sure you started it with "python server.py" and are viewing this page at http://localhost:8888.');
+  }
+};
+
+// Re-checks ESPN for every past-dated PENDING pick and finalizes WON/LOST.
+// Reuses computePickStatus so grading logic stays identical to the live scan.
+const resolvePendingResults = async () => {
+  const btn = qs('#btn-resolve-pending');
+  btn.disabled = true;
+  try {
+    setTrStatus('Fetching pending picks...');
+    const res = await fetch('/api/predictions?status=PENDING&limit=2000');
+    if (!res.ok) throw new Error('Server not reachable');
+    let pending = await res.json();
+    pending = pending.filter(r => new Date(r.match_date) < new Date());
+
+    if (pending.length === 0) {
+      setTrStatus('No past-dated pending picks to resolve.');
+      return;
+    }
+
+    // Group by match so each team's schedule is only fetched once
+    const byMatch = {};
+    pending.forEach(r => {
+      const key = `${r.match_date}|${r.home_team}|${r.away_team}`;
+      if (!byMatch[key]) byMatch[key] = { home_team: r.home_team, away_team: r.away_team, match_date: r.match_date, espn_slug: r.espn_slug, home_espn_id: r.home_espn_id, picks: [] };
+      byMatch[key].picks.push(r);
+    });
+
+    let resolvedCount = 0, checkedCount = 0;
+    const matchKeys = Object.keys(byMatch);
+
+    for (const key of matchKeys) {
+      checkedCount++;
+      const group = byMatch[key];
+      setTrStatus(`Resolving ${checkedCount}/${matchKeys.length}: ${group.home_team} vs ${group.away_team}...`);
+
+      let events = null;
+      let homeId = group.home_espn_id;
+      if (homeId && group.espn_slug) {
+        events = await fetchESPNSchedule(homeId, group.espn_slug);
+      }
+      if (!events) {
+        const fallback = await fetchTeamScheduleGlobally(group.home_team);
+        if (fallback) { events = fallback.events; homeId = fallback.teamId; }
+      }
+      if (!events) { await sleep(150); continue; }
+
+      const matchDate = new Date(group.match_date).toISOString().split('T')[0];
+      const ev = events.find(e => e.date.startsWith(matchDate) || e.date.startsWith(new Date(new Date(matchDate).getTime() - 86400000).toISOString().split('T')[0]));
+      if (!ev || !(ev.competitions[0].status.type.name.includes('FINAL') || ev.competitions[0].status.type.name.includes('FULL'))) {
+        await sleep(150);
+        continue;
+      }
+
+      const c1 = ev.competitions[0].competitors[0];
+      const c2 = ev.competitions[0].competitors[1];
+      let hScore, aScore;
+      if (c1.id === homeId) { hScore = getScore(c1); aScore = getScore(c2); }
+      else { aScore = getScore(c1); hScore = getScore(c2); }
+      if (isNaN(hScore) || isNaN(aScore)) { await sleep(150); continue; }
+
+      for (const pick of group.picks) {
+        const status = computePickStatus(pick, group.home_team, group.away_team, hScore, aScore);
+        if (status === 'WON' || status === 'LOST') {
+          await fetch('/api/update-pick', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: pick.id, status, actual_home: hScore, actual_away: aScore })
+          });
+          resolvedCount++;
+        }
+      }
+      await sleep(200);
+    }
+
+    setTrStatus(`Resolved ${resolvedCount} pick(s) across ${matchKeys.length} match(es) checked.`);
+    await loadTrackRecord();
+  } catch (e) {
+    console.error(e);
+    setTrStatus('⚠️ Error while resolving pending results. Check console.');
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ============ Admin: publish picks to the Artvion Football Tips subscription site ============
+if (qs('#saas-api-url')) qs('#saas-api-url').value = localStorage.getItem('saasApiUrl') || 'http://localhost:8000';
+if (qs('#saas-admin-token')) qs('#saas-admin-token').value = localStorage.getItem('saasAdminToken') || '';
+
+const publishToSaas = async () => {
+  const apiUrl = (qs('#saas-api-url')?.value || '').trim().replace(/\/$/, '');
+  const adminToken = qs('#saas-admin-token')?.value || '';
+  if (!apiUrl || !adminToken) { alert('Enter the Artvion Football Tips API URL and admin token first.'); return; }
+  localStorage.setItem('saasApiUrl', apiUrl);
+  localStorage.setItem('saasAdminToken', adminToken);
+
+  const matchesToPublish = globalMatches
+    .filter(m => m.picks && m.picks.length > 0)
+    .map(m => ({
+      match_date: m.raw.commence_time,
+      league: m.raw.sport_title || m.raw.sport_key,
+      home_team: m.raw.home_team,
+      away_team: m.raw.away_team,
+      picks: m.picks.map(p => ({ market: p.market, display: p.display, conf: p.conf, odds: p.odds, reasons: p.reasons }))
+    }));
+
+  if (matchesToPublish.length === 0) { alert('No picks to publish yet -- run a scan first.'); return; }
+
+  const btn = qs('#btn-publish-saas');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Publishing...';
+  try {
+    const res = await fetch(`${apiUrl}/api/admin/publish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify({ matches: matchesToPublish })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+    alert(`Published ${data.processed} pick(s) across ${matchesToPublish.length} match(es) to Artvion Football Tips.`);
+  } catch (e) {
+    alert(`Publish failed: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+};
+
+if (qs('#btn-publish-saas')) qs('#btn-publish-saas').addEventListener('click', publishToSaas);
+
+qs('#tab-scanner').addEventListener('click', () => switchView('scanner'));
+qs('#tab-trackrecord').addEventListener('click', () => switchView('trackrecord'));
+qs('#btn-refresh-tr').addEventListener('click', loadTrackRecord);
+qs('#btn-resolve-pending').addEventListener('click', resolvePendingResults);
+qs('#tr-filter-status').addEventListener('change', renderPredictionLog);
+
+  </script>
+</body>
+</html>

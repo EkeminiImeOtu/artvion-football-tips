@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Pricing — Artvion Football Tips{% endblock %}
+{% block content %}
+  <h1>Simple pricing.</h1>
+  <p class="lede">One plan. Cancel anytime from your dashboard — no phone calls, no retention maze.</p>
+
+  <div class="pricing-card">
+    <div class="price">$4.99<span>/month</span></div>
+    <ul>
+      <li>Unlimited daily predictions</li>
+      <li>Every market we cover, every league</li>
+      <li>Full accuracy history and breakdowns</li>
+      <li>Cancel anytime</li>
+    </ul>
+    {% if user %}
+      <form method="post" action="/billing/checkout">
+        <button type="submit" class="btn" style="width:100%;">Subscribe</button>
+      </form>
+    {% else %}
+      <a href="/signup?next=/pricing" class="btn" style="width:100%;text-align:center;display:block;">Sign up to subscribe</a>
+    {% endif %}
+  </div>
+
+  <p style="margin-top:1.5rem;color:var(--muted);font-size:0.9rem;">
+    Free accounts get {{ free_limit }} predictions per day, no card required.
+  </p>
+{% endblock %}

@@ -1,0 +1,120 @@
+"""
+Live scores (ESPN, free, no key) and football news (BBC Sport RSS, free, no
+key) with a short in-memory cache so a burst of visitors doesn't hammer
+either upstream source on every page load.
+"""
+import json
+import ssl
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+MAJOR_LEAGUES = [
+    ('eng.1', 'Premier League'),
+    ('esp.1', 'La Liga'),
+    ('ita.1', 'Serie A'),
+    ('ger.1', 'Bundesliga'),
+    ('fra.1', 'Ligue 1'),
+    ('uefa.champions', 'Champions League'),
+]
+
+NEWS_FEED_URL = 'https://feeds.bbci.co.uk/sport/football/rss.xml'
+
+CACHE_TTL_SCORES = 60
+CACHE_TTL_NEWS = 600
+_cache = {}
+
+
+def _cached(key, ttl, loader):
+    now = time.time()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[1]
+    value = loader()
+    _cache[key] = (now, value)
+    return value
+
+
+def _fetch(url):
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req, timeout=10, context=ctx) as r:
+        return r.read()
+
+
+def _load_live_scores():
+    fixtures = []
+    for slug, league_name in MAJOR_LEAGUES:
+        try:
+            data = json.loads(_fetch(f'https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard'))
+        except Exception:
+            continue
+        for ev in data.get('events', []):
+            try:
+                comp = ev['competitions'][0]
+                competitors = comp['competitors']
+                home = next(c for c in competitors if c.get('homeAway') == 'home')
+                away = next(c for c in competitors if c.get('homeAway') == 'away')
+                status = comp['status']['type']
+                fixtures.append({
+                    'league': league_name,
+                    'home_name': home['team']['displayName'],
+                    'away_name': away['team']['displayName'],
+                    'home_logo': home['team'].get('logo'),
+                    'away_logo': away['team'].get('logo'),
+                    'home_score': home.get('score'),
+                    'away_score': away.get('score'),
+                    'detail': status.get('shortDetail', status.get('description', '')),
+                    'is_live': status.get('state') == 'in',
+                    'is_final': bool(status.get('completed')),
+                })
+            except (KeyError, StopIteration):
+                continue
+
+    def sort_key(f):
+        return (0 if f['is_live'] else 1 if not f['is_final'] else 2)
+    fixtures.sort(key=sort_key)
+    return fixtures
+
+
+def get_live_scores():
+    return _cached('live_scores', CACHE_TTL_SCORES, _load_live_scores)
+
+
+def _load_news(limit=12):
+    try:
+        raw = _fetch(NEWS_FEED_URL)
+        root = ET.fromstring(raw)
+    except Exception:
+        return []
+    items = []
+    media_ns = '{http://search.yahoo.com/mrss/}'
+    for item in root.findall('.//item')[:limit]:
+        title = (item.findtext('title') or '').strip()
+        link = (item.findtext('link') or '').strip()
+        description = (item.findtext('description') or '').strip()
+        pub_raw = item.findtext('pubDate') or ''
+        thumb = item.find(f'{media_ns}thumbnail')
+        image_url = thumb.get('url') if thumb is not None else None
+        # BBC's RSS thumbnails are small (240px); ask for a bigger crop from
+        # the same CDN path instead of stretching a tiny image up.
+        if image_url:
+            image_url = image_url.replace('/standard/240/', '/standard/480/')
+        try:
+            pub_fmt = parsedate_to_datetime(pub_raw).strftime('%d %b, %H:%M')
+        except Exception:
+            pub_fmt = ''
+        if title and link:
+            items.append({
+                'title': title, 'link': link, 'pub_date': pub_fmt,
+                'image': image_url, 'description': description,
+            })
+    return items
+
+
+def get_news(limit=12):
+    return _cached('news', CACHE_TTL_NEWS, lambda: _load_news(limit))

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Artvion Football Tips — Probability Analytics{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="/">⚽ Artvion Football Tips</a>
+    <div class="nav-links">
+      <a href="/live-scores">Live Scores</a>
+      <a href="/news">News</a>
+      <a href="/predictions">Predictions</a>
+      <a href="/track-record">Track Record</a>
+    </div>
+  </nav>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    Predictions are model-generated probability estimates for informational and entertainment purposes only.
+    Not financial or betting advice, and not a guarantee of any outcome. See our
+    <a href="/track-record">real, published accuracy record</a> before relying on anything here. 18+. Gamble responsibly.
+  </footer>
+</body>
+</html>

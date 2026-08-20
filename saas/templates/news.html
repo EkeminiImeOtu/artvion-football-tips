@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Football News — Artvion Football Tips{% endblock %}
+{% block content %}
+  <h1>Latest football news</h1>
+  <p class="lede">From BBC Sport.</p>
+
+  {% if not articles %}
+    <p style="color:var(--muted);">Couldn't load news right now — try again shortly.</p>
+  {% endif %}
+
+  <div class="news-list">
+    {% for a in articles %}
+      <a class="news-item" href="{{ a.link }}" target="_blank" rel="noopener">
+        {% if a.image %}<img class="news-thumb" src="{{ a.image }}" alt="" loading="lazy">{% endif %}
+        <div class="news-body">
+          <div class="news-title">{{ a.title }}</div>
+          {% if a.description %}<div class="news-desc">{{ a.description }}</div>{% endif %}
+          <div class="news-meta">{{ a.pub_date }}</div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% endblock %}

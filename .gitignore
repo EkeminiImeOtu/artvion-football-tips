@@ -1,0 +1,21 @@
+# Secrets -- never commit
+.env
+saas/.env
+
+# Local databases (SQLite dev data, backtest cache) -- not source, and the
+# SaaS app now runs on Postgres in production anyway
+*.db
+*.db-wal
+*.db-shm
+backtest_data/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Local working files / backups, not part of the deployed app
+index.html.bak
+live_results.json
