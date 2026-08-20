@@ -4,8 +4,10 @@ key) with a short in-memory cache so a burst of visitors doesn't hammer
 either upstream source on every page load.
 """
 import json
+import re
 import ssl
 import time
+import unicodedata
 import urllib.request
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
@@ -118,3 +120,51 @@ def _load_news(limit=12):
 
 def get_news(limit=12):
     return _cached('news', CACHE_TTL_NEWS, lambda: _load_news(limit))
+
+
+# ============ Linking predictions to live fixtures ============
+# The Odds API (source of prediction team names) and ESPN (source of live
+# scores) don't always spell a team the same way. Worse than accents or
+# punctuation, common nicknames drop whole syllables from the middle of a
+# word ("Man City" -> "Manchester City", "Nottm Forest" -> "Nottingham
+# Forest"), which plain substring matching can't catch. Word-level token
+# matching (with a small alias table for the common short forms) handles
+# this: a match requires every token of the shorter name to appear in the
+# longer name, so "Real Madrid" still won't collide with "Real Sociedad".
+_TEAM_TOKEN_ALIASES = {
+    'man': 'manchester', 'utd': 'united', 'spurs': 'tottenham',
+    'wolves': 'wolverhampton', 'inter': 'internazionale', 'barca': 'barcelona',
+    'psg': 'paris', 'munchen': 'munich', 'nottm': 'nottingham',
+    'athletic': 'ath', 'atletico': 'atl',
+}
+_TEAM_TOKEN_STOPWORDS = {'fc', 'cf', 'afc', 'cd', 'sd', 'ud', 'the'}
+
+
+def _strip_accents(s):
+    return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
+
+
+def _team_tokens(name):
+    n = _strip_accents((name or '').lower())
+    n = re.sub(r'[^a-z0-9\s]', ' ', n)
+    tokens = set()
+    for t in n.split():
+        if t in _TEAM_TOKEN_STOPWORDS:
+            continue
+        tokens.add(_TEAM_TOKEN_ALIASES.get(t, t))
+    return tokens
+
+
+def _teams_match(a, b):
+    ta, tb = _team_tokens(a), _team_tokens(b)
+    if not ta or not tb:
+        return False
+    shorter, longer = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+    return shorter.issubset(longer)
+
+
+def find_live_fixture(home_team, away_team, fixtures):
+    for f in fixtures:
+        if _teams_match(home_team, f['home_name']) and _teams_match(away_team, f['away_name']):
+            return f
+    return None

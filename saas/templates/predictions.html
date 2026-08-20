@@ -17,14 +17,26 @@
     <p style="color:var(--muted);">No predictions published yet — check back soon.</p>
   {% endif %}
 
-  {% for p in picks %}
-    <div class="pick-card">
-      <div class="pick-main">
-        <div class="pick-market">{{ p.market }}</div>
-        <div class="pick-display">{{ p.display }}</div>
-        <div class="pick-match">{{ p.home_team }} vs {{ p.away_team }} · {{ p.league or '' }} · {{ p.match_date_fmt }}</div>
+  <div class="pick-grid">
+    {% for p in picks %}
+      <div class="pick-card">
+        <div class="pick-main">
+          <div class="pick-market">{{ p.market }}</div>
+          <div class="pick-display">{{ p.display }}</div>
+          <div class="pick-match">{{ p.home_team }} vs {{ p.away_team }} · {{ p.league or '' }} · {{ p.match_date_fmt }}</div>
+          {% if p.live %}
+            <div class="pick-live {{ 'is-live' if p.live.is_live else '' }}">
+              {% if p.live.is_live %}<span class="live-dot"></span>{% endif %}
+              {% if p.live.is_live or p.live.is_final %}
+                {{ p.live.home_score }}-{{ p.live.away_score }} · {{ p.live.detail }}
+              {% else %}
+                {{ p.live.detail }}
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        <span class="conf-pill conf-{{ p.confidence }}">{{ p.confidence }}</span>
       </div>
-      <span class="conf-pill conf-{{ p.confidence }}">{{ p.confidence }}</span>
-    </div>
-  {% endfor %}
+    {% endfor %}
+  </div>
 {% endblock %}

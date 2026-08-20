@@ -45,7 +45,14 @@
       {% if picks %}
         {% for p in picks %}
           <div class="teaser-mini-score">
-            <span>{{ p.display }}</span>
+            <span>
+              {{ p.display }}
+              {% if p.live %}
+                <strong class="{{ 'is-live' if p.live.is_live else '' }}" style="{{ 'color:var(--red);' if p.live.is_live else 'color:var(--muted);' }}">
+                  {% if p.live.is_live %}● {% endif %}{{ p.live.home_score }}-{{ p.live.away_score }}
+                </strong>
+              {% endif %}
+            </span>
             <span class="conf-pill conf-{{ p.confidence }}">{{ p.confidence }}</span>
           </div>
         {% endfor %}

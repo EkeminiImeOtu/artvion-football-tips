@@ -181,13 +181,22 @@ def _fetch_latest_picks():
     finally:
         conn.close()
     rows = sorted(rows, key=lambda r: _confidence_sort_key(r['confidence']))
+
+    # Today's fixtures only (that's all the live-scores source covers) --
+    # this is what actually connects "we predicted this" to "watch it happen".
+    fixtures = sports_data.get_live_scores()
+
     picks = []
     for r in rows:
         try:
             match_date_fmt = datetime.fromisoformat(r['match_date'].replace('Z', '+00:00')).strftime('%a %d %b')
         except Exception:
             match_date_fmt = r['match_date']
-        picks.append({**dict(r), 'match_date_fmt': match_date_fmt})
+        pick = {**dict(r), 'match_date_fmt': match_date_fmt}
+        live = sports_data.find_live_fixture(r['home_team'], r['away_team'], fixtures)
+        if live:
+            pick['live'] = live
+        picks.append(pick)
     return scan_date, picks
 
 
@@ -200,6 +209,20 @@ def predictions_page(request: Request):
 @app.get('/live-scores', response_class=HTMLResponse)
 def live_scores_page(request: Request):
     fixtures = sports_data.get_live_scores()
+    # Reuse the exact same matching _fetch_latest_picks already computed
+    # (pick -> live fixture) rather than re-deriving it, so both pages
+    # agree with each other about which fixture a prediction belongs to.
+    _, picks = _fetch_latest_picks()
+    picks_by_fixture = {}
+    for p in picks:
+        live = p.get('live')
+        if live:
+            key = (live['home_name'], live['away_name'])
+            picks_by_fixture.setdefault(key, []).append(p)
+    for f in fixtures:
+        matched = picks_by_fixture.get((f['home_name'], f['away_name']))
+        if matched:
+            f['predictions'] = matched
     return templates.TemplateResponse(request, 'live_scores.html', {'fixtures': fixtures})
 
 
