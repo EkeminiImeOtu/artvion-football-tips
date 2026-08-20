@@ -46,7 +46,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ADMIN_CORS_ORIGINS,
-    allow_methods=['POST'],
+    allow_methods=['POST', 'GET'],
     allow_headers=['authorization', 'content-type'],
 )
 app.mount('/static', StaticFiles(directory=os.path.join(APP_DIR, 'static')), name='static')
@@ -408,6 +408,22 @@ async def admin_publish(request: Request, _: None = Depends(require_admin)):
     finally:
         conn.close()
     return {'ok': True, 'processed': len(rows), 'scan_date': scan_date}
+
+
+@app.get('/api/admin/pending')
+def admin_pending(_: None = Depends(require_admin)):
+    """Past-dated PENDING predictions, for the scanner's 'resolve live site
+    results' flow to pick up and grade against real final scores."""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT id, home_team, away_team, match_date, market, display FROM predictions "
+            "WHERE status='PENDING' AND match_date < ? ORDER BY match_date ASC LIMIT 2000",
+            (now_iso(),)
+        ).fetchall()
+    finally:
+        conn.close()
+    return [dict(r) for r in rows]
 
 
 @app.post('/api/admin/resolve')

@@ -998,6 +998,7 @@
           <input type="text" id="saas-api-url" placeholder="Artvion Football Tips API URL, e.g. http://localhost:8000">
           <input type="password" id="saas-admin-token" placeholder="Admin token">
           <button id="btn-publish-saas" class="btn-secondary">🚀 Publish Today's Picks</button>
+          <button id="btn-resolve-live-site" class="btn-secondary">🔄 Resolve Live Site Results</button>
         </div>
       </div>
     </details>
@@ -2576,6 +2577,90 @@ const publishToSaas = async () => {
 };
 
 if (qs('#btn-publish-saas')) qs('#btn-publish-saas').addEventListener('click', publishToSaas);
+
+// Grades past-dated PENDING predictions on the live site against real ESPN
+// results -- same lookup logic as the personal tool's own resolvePendingResults,
+// just pointed at the remote site's admin API instead of the local one. The
+// live site never stored espn_slug/home_espn_id (publishToSaas doesn't send
+// them), so this always uses the by-name ESPN search rather than a fast-path ID.
+const resolveLiveSiteResults = async () => {
+  const apiUrl = (qs('#saas-api-url')?.value || '').trim().replace(/\/$/, '');
+  const adminToken = qs('#saas-admin-token')?.value || '';
+  if (!apiUrl || !adminToken) { alert('Enter the Artvion Football Tips API URL and admin token first.'); return; }
+
+  const btn = qs('#btn-resolve-live-site');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  try {
+    btn.textContent = 'Fetching pending...';
+    const res = await fetch(`${apiUrl}/api/admin/pending`, {
+      headers: { 'Authorization': `Bearer ${adminToken}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const pending = await res.json();
+
+    if (pending.length === 0) {
+      alert('No past-dated pending picks to resolve on the live site.');
+      return;
+    }
+
+    const byMatch = {};
+    pending.forEach(r => {
+      const key = `${r.match_date}|${r.home_team}|${r.away_team}`;
+      if (!byMatch[key]) byMatch[key] = { home_team: r.home_team, away_team: r.away_team, match_date: r.match_date, picks: [] };
+      byMatch[key].picks.push(r);
+    });
+
+    let resolvedCount = 0, checkedCount = 0;
+    const matchKeys = Object.keys(byMatch);
+
+    for (const key of matchKeys) {
+      checkedCount++;
+      const group = byMatch[key];
+      btn.textContent = `Resolving ${checkedCount}/${matchKeys.length}...`;
+
+      const fallback = await fetchTeamScheduleGlobally(group.home_team);
+      if (!fallback || !fallback.events) { await sleep(150); continue; }
+      const { events, teamId: homeId } = fallback;
+
+      const matchDate = new Date(group.match_date).toISOString().split('T')[0];
+      const ev = events.find(e => e.date.startsWith(matchDate) || e.date.startsWith(new Date(new Date(matchDate).getTime() - 86400000).toISOString().split('T')[0]));
+      if (!ev || !(ev.competitions[0].status.type.name.includes('FINAL') || ev.competitions[0].status.type.name.includes('FULL'))) {
+        await sleep(150);
+        continue;
+      }
+
+      const c1 = ev.competitions[0].competitors[0];
+      const c2 = ev.competitions[0].competitors[1];
+      let hScore, aScore;
+      if (c1.id === homeId) { hScore = getScore(c1); aScore = getScore(c2); }
+      else { aScore = getScore(c1); hScore = getScore(c2); }
+      if (isNaN(hScore) || isNaN(aScore)) { await sleep(150); continue; }
+
+      for (const pick of group.picks) {
+        const status = computePickStatus(pick, group.home_team, group.away_team, hScore, aScore);
+        if (status === 'WON' || status === 'LOST') {
+          await fetch(`${apiUrl}/api/admin/resolve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ id: pick.id, status, actual_home: hScore, actual_away: aScore })
+          });
+          resolvedCount++;
+        }
+      }
+      await sleep(200);
+    }
+
+    alert(`Resolved ${resolvedCount} pick(s) across ${matchKeys.length} match(es) checked on the live site.`);
+  } catch (e) {
+    alert(`Resolve failed: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+};
+
+if (qs('#btn-resolve-live-site')) qs('#btn-resolve-live-site').addEventListener('click', resolveLiveSiteResults);
 
 qs('#tab-scanner').addEventListener('click', () => switchView('scanner'));
 qs('#tab-trackrecord').addEventListener('click', () => switchView('trackrecord'));
