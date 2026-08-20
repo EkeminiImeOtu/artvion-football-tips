@@ -13,6 +13,7 @@
     <a class="nav-brand" href="/">⚽ Artvion Football Tips</a>
     <div class="nav-links">
       <a href="/live-scores">Live Scores</a>
+      <a href="/standings">Standings</a>
       <a href="/news">News</a>
       <a href="/predictions">Predictions</a>
       <a href="/track-record">Track Record</a>
@@ -31,9 +32,36 @@
     {% block content %}{% endblock %}
   </main>
   <footer>
-    Predictions are model-generated probability estimates for informational and entertainment purposes only.
-    Not financial or betting advice, and not a guarantee of any outcome. See our
-    <a href="/track-record">real, published accuracy record</a> before relying on anything here. 18+. Gamble responsibly.
+    <div class="footer-columns">
+      <div class="footer-col">
+        <div class="footer-brand">⚽ Artvion Football Tips</div>
+        <p>Probability-based football predictions with a real, public track record. Not betting advice.</p>
+      </div>
+      <div class="footer-col">
+        <h3>Explore</h3>
+        <a href="/live-scores">Live Scores</a>
+        <a href="/standings">Standings</a>
+        <a href="/news">News</a>
+        <a href="/predictions">Predictions</a>
+        <a href="/track-record">Track Record</a>
+      </div>
+      <div class="footer-col">
+        <h3>Account</h3>
+        {% if user %}
+          <a href="/pricing">Manage access</a>
+        {% else %}
+          <a href="/signup">Sign Up</a>
+          <a href="/login">Log In</a>
+        {% endif %}
+        <a href="/pricing">Pricing</a>
+      </div>
+    </div>
+    <div class="footer-disclaimer">
+      Predictions are model-generated probability estimates for informational and entertainment purposes only.
+      Not financial or betting advice, and not a guarantee of any outcome. See our
+      <a href="/track-record">real, published accuracy record</a> before relying on anything here. 18+. Gamble responsibly.
+      &middot; © {{ current_year }} Artvion Football Tips
+    </div>
   </footer>
 </body>
 </html>

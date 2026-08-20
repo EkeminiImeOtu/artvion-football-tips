@@ -89,6 +89,7 @@ p.lede { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.5rem; max-wid
   padding: 0.7rem 1.4rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
 }
 .btn-secondary:hover { text-decoration: none; border-color: var(--navy2); }
+.btn-secondary.active { background: linear-gradient(135deg, var(--navy), var(--navy2)); color: var(--white-touch); border-color: transparent; }
 
 .card, .pricing-card, .pick-card, .stat-card, .score-card, .news-item, .teaser-card, .locked-teaser {
   background: var(--glass-bg);
@@ -153,7 +154,15 @@ input:focus { outline: none; border-color: var(--navy2); }
 .stat-card .val { font-size: 1.7rem; font-weight: 800; color: var(--navy); }
 .stat-card .label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
 
-footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 2rem 1rem 3rem; }
+footer { color: var(--muted); font-size: 0.85rem; padding: 3rem 2rem 2rem; border-top: 1px solid var(--glass-border); margin-top: 2rem; }
+.footer-columns { display: flex; flex-wrap: wrap; gap: 2.5rem; max-width: 1400px; margin: 0 auto 2rem; }
+.footer-col { flex: 1 1 200px; display: flex; flex-direction: column; gap: 0.6rem; }
+.footer-col a { color: var(--muted); }
+.footer-col a:hover { color: var(--navy2); text-decoration: none; }
+.footer-col p { max-width: 32ch; line-height: 1.5; }
+.footer-brand { font-weight: 800; color: var(--navy); font-size: 1.05rem; margin-bottom: 0.5rem; }
+.footer-col h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text); margin-bottom: 0.2rem; }
+.footer-disclaimer { max-width: 1400px; margin: 0 auto; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); font-size: 0.78rem; line-height: 1.6; text-align: center; }
 .disclaimer-box {
   background: rgba(183, 121, 31, 0.08); border: 1px solid rgba(183, 121, 31, 0.28);
   border-radius: 10px; padding: 1rem 1.2rem; font-size: 0.85rem; color: #6b5013; margin: 1.5rem 0;

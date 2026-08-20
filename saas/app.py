@@ -61,6 +61,7 @@ app.add_middleware(
 )
 app.mount('/static', StaticFiles(directory=os.path.join(APP_DIR, 'static')), name='static')
 templates = Jinja2Templates(directory=os.path.join(APP_DIR, 'templates'))
+templates.env.globals['current_year'] = datetime.now(timezone.utc).year
 
 
 @app.on_event('startup')
@@ -261,6 +262,19 @@ def live_scores_page(request: Request):
 def news_page(request: Request):
     articles = sports_data.get_news(20)
     return templates.TemplateResponse(request, 'news.html', {'user': current_user(request), 'articles': articles})
+
+
+@app.get('/standings', response_class=HTMLResponse)
+def standings_page(request: Request, league: str = None):
+    leagues = sports_data.STANDINGS_LEAGUES
+    valid_slugs = {slug for slug, _ in leagues}
+    active_slug = league if league in valid_slugs else leagues[0][0]
+    active_name = dict(leagues)[active_slug]
+    rows = sports_data.get_standings(active_slug)
+    return templates.TemplateResponse(request, 'standings.html', {
+        'user': current_user(request), 'leagues': leagues,
+        'active_slug': active_slug, 'active_name': active_name, 'rows': rows,
+    })
 
 
 # ---------- dashboard: now just an alias for /predictions, which already

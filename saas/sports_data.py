@@ -10,12 +10,18 @@ import time
 import unicodedata
 import urllib.request
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 from email.utils import parsedate_to_datetime
 
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
+# Same league set the predictions/backtest already cover (see backtest.py's
+# MAIN_LEAGUES/EXTRA_LEAGUES) -- live-scores was previously limited to just
+# the 6 biggest European leagues, so on days when the action was elsewhere
+# (MLS, Brasileirao, Super Lig, etc.) the page looked empty even though
+# matches -- including ones we'd predicted -- were actually being played.
 MAJOR_LEAGUES = [
     ('eng.1', 'Premier League'),
     ('esp.1', 'La Liga'),
@@ -23,6 +29,22 @@ MAJOR_LEAGUES = [
     ('ger.1', 'Bundesliga'),
     ('fra.1', 'Ligue 1'),
     ('uefa.champions', 'Champions League'),
+    ('eng.2', 'Championship'),
+    ('sco.1', 'Premiership (Scotland)'),
+    ('ned.1', 'Eredivisie'),
+    ('bel.1', 'Pro League (Belgium)'),
+    ('por.1', 'Primeira Liga'),
+    ('tur.1', 'Super Lig'),
+    ('gre.1', 'Super League (Greece)'),
+    ('arg.1', 'Liga Profesional (Argentina)'),
+    ('aut.1', 'Bundesliga (Austria)'),
+    ('bra.1', 'Brasileirao'),
+    ('den.1', 'Superliga (Denmark)'),
+    ('mex.1', 'Liga MX'),
+    ('nor.1', 'Eliteserien'),
+    ('pol.1', 'Ekstraklasa'),
+    ('swe.1', 'Allsvenskan'),
+    ('usa.1', 'MLS'),
 ]
 
 NEWS_FEED_URL = 'https://feeds.bbci.co.uk/sport/football/rss.xml'
@@ -48,43 +70,124 @@ def _fetch(url):
         return r.read()
 
 
-def _load_live_scores():
+def _load_league_fixtures(slug, league_name):
     fixtures = []
-    for slug, league_name in MAJOR_LEAGUES:
+    try:
+        data = json.loads(_fetch(f'https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard'))
+    except Exception:
+        return fixtures
+    for ev in data.get('events', []):
         try:
-            data = json.loads(_fetch(f'https://site.api.espn.com/apis/site/v2/sports/soccer/{slug}/scoreboard'))
-        except Exception:
+            comp = ev['competitions'][0]
+            competitors = comp['competitors']
+            home = next(c for c in competitors if c.get('homeAway') == 'home')
+            away = next(c for c in competitors if c.get('homeAway') == 'away')
+            status = comp['status']['type']
+            fixtures.append({
+                'league': league_name,
+                'home_name': home['team']['displayName'],
+                'away_name': away['team']['displayName'],
+                'home_logo': home['team'].get('logo'),
+                'away_logo': away['team'].get('logo'),
+                'home_score': home.get('score'),
+                'away_score': away.get('score'),
+                'detail': status.get('shortDetail', status.get('description', '')),
+                'is_live': status.get('state') == 'in',
+                'is_final': bool(status.get('completed')),
+            })
+        except (KeyError, StopIteration):
             continue
-        for ev in data.get('events', []):
-            try:
-                comp = ev['competitions'][0]
-                competitors = comp['competitors']
-                home = next(c for c in competitors if c.get('homeAway') == 'home')
-                away = next(c for c in competitors if c.get('homeAway') == 'away')
-                status = comp['status']['type']
-                fixtures.append({
-                    'league': league_name,
-                    'home_name': home['team']['displayName'],
-                    'away_name': away['team']['displayName'],
-                    'home_logo': home['team'].get('logo'),
-                    'away_logo': away['team'].get('logo'),
-                    'home_score': home.get('score'),
-                    'away_score': away.get('score'),
-                    'detail': status.get('shortDetail', status.get('description', '')),
-                    'is_live': status.get('state') == 'in',
-                    'is_final': bool(status.get('completed')),
-                })
-            except (KeyError, StopIteration):
-                continue
+    return fixtures
+
+
+def _load_live_scores():
+    # Fetched in parallel -- MAJOR_LEAGUES covers 21 leagues now (matching
+    # the predictions' own league coverage), and doing that serially would
+    # make a cold-cache page load noticeably slow (worst case ~21x a single
+    # request instead of ~1x).
+    fixtures = []
+    with ThreadPoolExecutor(max_workers=len(MAJOR_LEAGUES)) as pool:
+        for result in pool.map(lambda pair: _load_league_fixtures(*pair), MAJOR_LEAGUES):
+            fixtures.extend(result)
+
+    # Group by league (in MAJOR_LEAGUES order) so the page can show one
+    # header per league instead of the same league's name repeating every
+    # time fixtures from different leagues interleave; live matches surface
+    # first within each league's own block.
+    league_order = {name: i for i, (_, name) in enumerate(MAJOR_LEAGUES)}
 
     def sort_key(f):
-        return (0 if f['is_live'] else 1 if not f['is_final'] else 2)
+        status_rank = 0 if f['is_live'] else 1 if not f['is_final'] else 2
+        return (league_order.get(f['league'], len(league_order)), status_rank)
     fixtures.sort(key=sort_key)
     return fixtures
 
 
 def get_live_scores():
     return _cached('live_scores', CACHE_TTL_SCORES, _load_live_scores)
+
+
+# ============ League tables ============
+# Top leagues only (not the full 21-league predictions list) -- a table is
+# a "top leagues" feature, and Champions League doesn't have a normal
+# season-long table (group/knockout format), so it's deliberately excluded
+# here even though it's in MAJOR_LEAGUES for live scores.
+STANDINGS_LEAGUES = [
+    ('eng.1', 'Premier League'),
+    ('esp.1', 'La Liga'),
+    ('ita.1', 'Serie A'),
+    ('ger.1', 'Bundesliga'),
+    ('fra.1', 'Ligue 1'),
+]
+CACHE_TTL_STANDINGS = 900  # tables move much slower than live scores
+
+
+def _load_standings(slug):
+    # NOTE: must be /apis/v2/ here, not /apis/site/v2/ (which returns an
+    # empty {} for soccer standings specifically).
+    try:
+        data = json.loads(_fetch(f'https://site.api.espn.com/apis/v2/sports/soccer/{slug}/standings'))
+    except Exception:
+        return []
+    children = data.get('children') or []
+    if not children:
+        return []
+    entries = children[0].get('standings', {}).get('entries', [])
+    rows = []
+    for i, entry in enumerate(entries):
+        team = entry.get('team', {}) or {}
+        stat_map = {}
+        for s in entry.get('stats', []) or []:
+            name = (s.get('name') or s.get('abbreviation') or '').lower()
+            if name:
+                stat_map[name] = s.get('displayValue', s.get('value'))
+
+        def pick(*names, default='-'):
+            for n in names:
+                if n in stat_map:
+                    return stat_map[n]
+            return default
+
+        logo = team.get('logo')
+        if not logo and team.get('logos'):
+            logo = (team['logos'][0] or {}).get('href')
+
+        rows.append({
+            'rank': pick('rank', default=i + 1),
+            'team': team.get('displayName') or team.get('shortDisplayName') or team.get('name') or '',
+            'logo': logo,
+            'played': pick('gamesplayed', 'played'),
+            'won': pick('wins'),
+            'drawn': pick('ties', 'draws'),
+            'lost': pick('losses'),
+            'gd': pick('pointdifferential', 'differential', 'goaldifference'),
+            'points': pick('points'),
+        })
+    return rows
+
+
+def get_standings(slug):
+    return _cached(f'standings_{slug}', CACHE_TTL_STANDINGS, lambda: _load_standings(slug))
 
 
 def _load_news(limit=12):
