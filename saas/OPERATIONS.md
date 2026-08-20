@@ -31,24 +31,33 @@ Step 3 prints a new `https://xxxx.trycloudflare.com` URL **every time you run
 it** -- the free tier doesn't give you a stable address. If you restart the
 tunnel, the live link changes and you'd need to share the new one.
 
-## Publishing real predictions
+## Publishing real predictions -- weekly, Sunday night
+
+This is a **weekly** product, not daily: publish once on Sunday night,
+covering the coming Monday-through-Sunday week. The site's copy ("This
+week's predictions", "updated every Sunday night") assumes this cadence --
+if that ever changes, the wording in predictions.html/dashboard.html/
+landing.html/pricing.html needs to change with it.
 
 The public site never talks to the Odds API or ESPN itself -- it only shows
-what's been published to it. To get real (non-test) predictions live:
+what's been published to it. Each Sunday night:
 
 1. Open `http://localhost:8888` (the personal scanner).
 2. Paste in your own Odds API key (never share this key or paste it anywhere
    else -- it's yours).
-3. Pick a date range, click **Scan + Analyse**.
+3. Set the date range to the coming Monday through Sunday, click **Scan + Analyse**.
 4. Once it finishes, open **⚙️ Admin: Publish to Artvion Football Tips**,
-   confirm the API URL is `http://localhost:8000` and the admin token field
-   is filled in (it remembers the token via your browser's local storage),
-   then click **🚀 Publish Today's Picks**.
-5. Refresh the public site -- the real picks replace whatever was there.
+   confirm the API URL is your real Render URL (e.g.
+   `https://artvion-football-tips.onrender.com`) and the admin token field
+   is filled in (it remembers both via your browser's local storage), then
+   click **🚀 Publish This Week's Picks**.
+5. Refresh the public site -- the week's real picks replace whatever was there.
 
-Resolving picks (marking them WON/LOST once matches finish) isn't wired up
-for the public site yet -- that's the next thing worth building if the
-Track Record page matters to you going forward.
+To grade last week's picks (mark them WON/LOST against real final scores)
+before publishing the new week: same panel, **🔄 Resolve Live Site Results**
+-- looks up each past-dated PENDING pick via ESPN and resolves it, same
+logic as the personal tool's own local resolve flow. Worth running this
+before Sunday's publish so the Track Record page stays current.
 
 ## Config that matters (`saas/.env`)
 

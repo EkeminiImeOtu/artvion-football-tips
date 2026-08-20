@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Artvion Football Tips{% endblock %}
 {% block content %}
-  <h1>Today's predictions</h1>
+  <h1>This week's predictions</h1>
   {% if checkout_success %}
     <div class="notice">You're subscribed — thanks! Full predictions are unlocked below.</div>
   {% endif %}
   <p class="lede">
+    Updated every Sunday night, covering matches Monday through Sunday.
     {% if is_subscribed %}
-      Full access — {{ picks|length }} prediction{{ '' if picks|length == 1 else 's' }} from the latest scan.
+      Full access — {{ picks|length }} prediction{{ '' if picks|length == 1 else 's' }} from this week's scan.
     {% else %}
-      Free plan: your {{ free_limit }} highest-confidence picks today. {{ locked_count }} more are locked.
+      Free plan: your {{ free_limit }} highest-confidence picks this week. {{ locked_count }} more are locked.
     {% endif %}
   </p>
 

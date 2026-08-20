@@ -12,9 +12,11 @@ Requires env vars for billing to work: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
 STRIPE_PRICE_ID. See .env.example. ADMIN_TOKEN protects the publish/resolve
 endpoints -- set it to something random before exposing this publicly.
 """
+import hashlib
+import hmac
 import os
 import secrets
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, timezone
 from urllib.parse import urlparse
 
 import psycopg2.extras
@@ -37,6 +39,20 @@ APP_DIR = os.path.dirname(os.path.abspath(__file__))
 FREE_DAILY_LIMIT = int(os.environ.get('FREE_DAILY_LIMIT', '3'))
 ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN')  # required to publish/resolve picks
 SESSION_COOKIE = 'session'
+
+# Manual, no-accounts paywall: pay via Selar -> message WhatsApp -> get a
+# shared passcode -> it unlocks full predictions on this device for
+# UNLOCK_TTL_DAYS. The cookie itself never contains the passcode -- it's an
+# HMAC-signed expiry, so it can't be forged without knowing ADMIN_TOKEN
+# (reused as the signing key rather than adding yet another secret to manage).
+# The real, inherent limit of a *shared* passcode (as opposed to per-user
+# accounts) is that anyone who has it can pass it around -- that trade-off
+# was chosen deliberately for simplicity over building real accounts back out.
+VIP_PASSCODE = os.environ.get('VIP_PASSCODE')
+WHATSAPP_LINK = os.environ.get('WHATSAPP_LINK', '')
+SELAR_LINK = os.environ.get('SELAR_LINK', '')
+UNLOCK_COOKIE = 'vip_access'
+UNLOCK_TTL_DAYS = 35
 # Origins allowed to call /api/admin/* from a browser (the existing scanner
 # runs on its own origin/port). The bearer token is the real security
 # boundary here, not CORS -- this just lets the browser make the call at all.
@@ -60,6 +76,8 @@ def _startup():
         print("WARNING: ADMIN_TOKEN is not set -- publish/resolve endpoints are disabled until it is.")
     if not billing.billing_configured():
         print("NOTE: Stripe is not configured (STRIPE_SECRET_KEY / STRIPE_PRICE_ID) -- checkout will error until it is.")
+    if not VIP_PASSCODE:
+        print("NOTE: VIP_PASSCODE is not set -- the /unlock paywall will reject every code until it is.")
 
 
 # ---------- auth helpers ----------
@@ -67,6 +85,28 @@ def _startup():
 def current_user(request: Request):
     token = request.cookies.get(SESSION_COOKIE)
     return auth.get_user_from_session(token)
+
+
+def _make_unlock_cookie():
+    expiry = str(int((datetime.now(timezone.utc) + timedelta(days=UNLOCK_TTL_DAYS)).timestamp()))
+    sig = hmac.new((ADMIN_TOKEN or '').encode(), expiry.encode(), hashlib.sha256).hexdigest()
+    return f"{expiry}.{sig}"
+
+
+def _verify_unlock_cookie(value):
+    if not value or not ADMIN_TOKEN:
+        return False
+    try:
+        expiry_str, sig = value.split('.', 1)
+    except ValueError:
+        return False
+    expected_sig = hmac.new(ADMIN_TOKEN.encode(), expiry_str.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected_sig):
+        return False
+    try:
+        return int(expiry_str) > int(datetime.now(timezone.utc).timestamp())
+    except ValueError:
+        return False
 
 
 def require_same_origin(request: Request):
@@ -203,7 +243,31 @@ def _fetch_latest_picks():
 @app.get('/predictions', response_class=HTMLResponse)
 def predictions_page(request: Request):
     scan_date, picks = _fetch_latest_picks()
-    return templates.TemplateResponse(request, 'predictions.html', {'scan_date': scan_date, 'picks': picks})
+    unlocked = _verify_unlock_cookie(request.cookies.get(UNLOCK_COOKIE))
+    visible = picks if unlocked else picks[:FREE_DAILY_LIMIT]
+    locked_count = 0 if unlocked else max(0, len(picks) - FREE_DAILY_LIMIT)
+    return templates.TemplateResponse(request, 'predictions.html', {
+        'scan_date': scan_date, 'picks': visible, 'is_unlocked': unlocked, 'locked_count': locked_count,
+        'whatsapp_link': WHATSAPP_LINK, 'selar_link': SELAR_LINK,
+    })
+
+
+@app.get('/unlock', response_class=HTMLResponse)
+def unlock_form(request: Request, error: str = None):
+    already_unlocked = _verify_unlock_cookie(request.cookies.get(UNLOCK_COOKIE))
+    return templates.TemplateResponse(request, 'unlock.html', {
+        'error': error, 'already_unlocked': already_unlocked,
+        'whatsapp_link': WHATSAPP_LINK, 'selar_link': SELAR_LINK,
+    })
+
+
+@app.post('/unlock')
+def unlock_submit(request: Request, passcode: str = Form(...)):
+    if not VIP_PASSCODE or not secrets.compare_digest(passcode.strip(), VIP_PASSCODE):
+        return RedirectResponse(url='/unlock?error=1', status_code=303)
+    resp = RedirectResponse(url='/predictions', status_code=303)
+    resp.set_cookie(UNLOCK_COOKIE, _make_unlock_cookie(), httponly=True, samesite='lax', max_age=UNLOCK_TTL_DAYS * 86400)
+    return resp
 
 
 @app.get('/live-scores', response_class=HTMLResponse)

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Unlock Full Access — Artvion Football Tips{% endblock %}
+{% block content %}
+  <div class="narrow">
+    <h1>Unlock full access</h1>
+
+    {% if already_unlocked %}
+      <div class="notice">✅ You already have full access on this device.</div>
+      <a href="/predictions" class="btn" style="margin-top:1rem;display:inline-block;">Go to predictions</a>
+    {% else %}
+      <p class="lede">Three steps to unlock every prediction, not just the free preview.</p>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <ol style="padding-left:1.2rem;line-height:2.1;">
+          <li>Pay for monthly access{% if selar_link %} via <a href="{{ selar_link }}" target="_blank" rel="noopener">our Selar page</a>{% endif %}.</li>
+          <li>Message us{% if whatsapp_link %} on <a href="{{ whatsapp_link }}" target="_blank" rel="noopener">WhatsApp</a>{% else %} on WhatsApp{% endif %} with your payment reference.</li>
+          <li>We'll send you the unlock code — enter it below.</li>
+        </ol>
+      </div>
+
+      {% if error %}<div class="error">That code didn't work. Double-check it, or message us on WhatsApp if you're stuck.</div>{% endif %}
+
+      <form class="stack" method="post" action="/unlock">
+        <div>
+          <label>Unlock code</label>
+          <input type="text" name="passcode" required autofocus autocomplete="off">
+        </div>
+        <button type="submit" class="btn">Unlock</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}

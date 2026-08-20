@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Predictions — Artvion Football Tips{% endblock %}
 {% block content %}
-  <h1>Today's predictions</h1>
+  <h1>This week's predictions</h1>
   <p class="lede">
-    Free, open to everyone, no account needed.
-    {% if scan_date %}{{ picks|length }} prediction{{ '' if picks|length == 1 else 's' }} from the latest scan.{% endif %}
+    Updated every Sunday night, covering matches Monday through Sunday.
+    {% if is_unlocked %}
+      Full access unlocked. {% if scan_date %}{{ picks|length }} prediction{{ '' if picks|length == 1 else 's' }} from this week's scan.{% endif %}
+    {% else %}
+      This is a free preview. {% if locked_count > 0 %}{{ locked_count }} more are unlocked with monthly access.{% endif %}
+    {% endif %}
   </p>
 
   <div class="disclaimer-box">
@@ -14,7 +18,7 @@
   </div>
 
   {% if not scan_date %}
-    <p style="color:var(--muted);">No predictions published yet — check back soon.</p>
+    <p style="color:var(--muted);">No predictions published yet — check back after the next weekly update.</p>
   {% endif %}
 
   <div class="pick-grid">
@@ -39,4 +43,19 @@
       </div>
     {% endfor %}
   </div>
+
+  {% if not is_unlocked and locked_count > 0 %}
+    <div class="pick-card locked" style="margin-top:0.9rem;">
+      <div class="pick-main">
+        <div class="pick-market">Locked</div>
+        <div class="pick-display">████████ vs ████████</div>
+        <div class="pick-match">Unlock full access to reveal</div>
+      </div>
+      <span class="conf-pill conf-medium">???</span>
+    </div>
+    <div class="locked-teaser">
+      <p style="margin-bottom:1rem;">{{ locked_count }} more prediction{{ '' if locked_count == 1 else 's' }} available with monthly access.</p>
+      <a href="/unlock" class="btn">Unlock Full Access</a>
+    </div>
+  {% endif %}
 {% endblock %}
