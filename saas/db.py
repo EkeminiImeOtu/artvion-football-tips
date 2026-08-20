@@ -43,6 +43,12 @@ class _Conn:
         cur = self._conn.cursor()
         cur.execute(sql)
 
+    def raw_cursor(self):
+        """Escape hatch to the real psycopg2 cursor, for bulk operations
+        (e.g. psycopg2.extras.execute_values) that the sqlite3-shaped
+        execute() wrapper can't express efficiently."""
+        return self._conn.cursor()
+
     def commit(self):
         self._conn.commit()
 

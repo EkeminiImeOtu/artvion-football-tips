@@ -17,6 +17,8 @@ import secrets
 from datetime import datetime, date
 from urllib.parse import urlparse
 
+import psycopg2.extras
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -369,35 +371,43 @@ async def admin_publish(request: Request, _: None = Depends(require_admin)):
     body = await request.json()
     matches = body.get('matches', [])
     scan_date = date.today().isoformat()
+    published_at = now_iso()
+
+    rows = []
+    for m in matches:
+        for p in m.get('picks', []):
+            match_date = m.get('match_date')
+            home_team = m.get('home_team')
+            away_team = m.get('away_team')
+            market = p.get('market')
+            display = p.get('display')
+            if not (match_date and home_team and away_team and market and display):
+                continue
+            rows.append((
+                scan_date, match_date, m.get('league'), home_team, away_team, market, display,
+                p.get('conf'), p.get('odds'), '; '.join(p.get('reasons', []) or []), 'PENDING', published_at
+            ))
+
     conn = get_db()
-    inserted = 0
     try:
-        for m in matches:
-            for p in m.get('picks', []):
-                match_date = m.get('match_date')
-                home_team = m.get('home_team')
-                away_team = m.get('away_team')
-                market = p.get('market')
-                display = p.get('display')
-                if not (match_date and home_team and away_team and market and display):
-                    continue
-                conn.execute('''
-                    INSERT INTO predictions
-                    (scan_date, match_date, league, home_team, away_team, market, display, confidence, odds, reasons, status, published_at)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-                    ON CONFLICT(match_date, home_team, away_team, market, display) DO UPDATE SET
-                        scan_date=excluded.scan_date, confidence=excluded.confidence, odds=excluded.odds,
-                        reasons=excluded.reasons, published_at=excluded.published_at
-                    WHERE predictions.status='PENDING'
-                ''', (
-                    scan_date, match_date, m.get('league'), home_team, away_team, market, display,
-                    p.get('conf'), p.get('odds'), '; '.join(p.get('reasons', []) or []), 'PENDING', now_iso()
-                ))
-                inserted += 1
+        if rows:
+            # A real scan can carry hundreds of picks -- one INSERT per row
+            # over the network to a remote Postgres adds up to real delay.
+            # execute_values sends them all in a single round-trip instead.
+            cur = conn.raw_cursor()
+            psycopg2.extras.execute_values(cur, '''
+                INSERT INTO predictions
+                (scan_date, match_date, league, home_team, away_team, market, display, confidence, odds, reasons, status, published_at)
+                VALUES %s
+                ON CONFLICT(match_date, home_team, away_team, market, display) DO UPDATE SET
+                    scan_date=excluded.scan_date, confidence=excluded.confidence, odds=excluded.odds,
+                    reasons=excluded.reasons, published_at=excluded.published_at
+                WHERE predictions.status='PENDING'
+            ''', rows)
         conn.commit()
     finally:
         conn.close()
-    return {'ok': True, 'processed': inserted, 'scan_date': scan_date}
+    return {'ok': True, 'processed': len(rows), 'scan_date': scan_date}
 
 
 @app.post('/api/admin/resolve')
