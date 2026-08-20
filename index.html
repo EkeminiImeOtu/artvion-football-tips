@@ -2080,29 +2080,17 @@ const fetchTeamScheduleGlobally = async (teamName) => {
   try {
     const searchRes = await fetch(`/espn-search/?query=${encodeURIComponent(teamName)}&limit=5&type=team`);
     const searchData = await searchRes.json();
-    if (!searchData || !searchData.contents) return null;
-    
-    const item = searchData.contents.find(i => i.link && i.link.web && i.link.web.includes('/football/club/'));
+    const teamResult = searchData?.results?.find(r => r.type === 'team');
+    if (!teamResult || !teamResult.contents) return null;
+
+    const item = teamResult.contents.find(i => i.link && i.link.web && i.link.web.includes('/football/club/'));
     if (!item) return null;
-    
+
     const parts = item.link.web.split('id/');
     if (parts.length < 2) return null;
     const teamId = parts[1].split('/')[0];
-    
-    const profileRes = await fetch(`/espn/soccer/teams/${teamId}`);
-    const profileData = await profileRes.json();
-    
-    let leagueSlug = 'club.friendly';
-    try {
-      const defaultLeagueLink = profileData.teamInfo?.defaultLeague?.links?.[0]?.href;
-      if (defaultLeagueLink) {
-        const lp = defaultLeagueLink.split('name/');
-        if (lp.length > 1) {
-          leagueSlug = lp[1].split('/')[0];
-        }
-      }
-    } catch(e) {}
-    
+    const leagueSlug = item.defaultLeagueSlug || 'club.friendly';
+
     const year = new Date().getFullYear();
     const schedRes = await fetch(`/espn/soccer/${leagueSlug}/teams/${teamId}/schedule?season=${year}`);
     const schedData = await schedRes.json();
@@ -2619,13 +2607,21 @@ const resolveLiveSiteResults = async () => {
       const group = byMatch[key];
       btn.textContent = `Resolving ${checkedCount}/${matchKeys.length}...`;
 
+      const label = `${group.home_team} vs ${group.away_team} (${group.match_date})`;
+
       const fallback = await fetchTeamScheduleGlobally(group.home_team);
-      if (!fallback || !fallback.events) { await sleep(150); continue; }
+      if (!fallback || !fallback.events) { console.log(`[resolve] SKIP no ESPN schedule found for "${group.home_team}" — ${label}`); await sleep(150); continue; }
       const { events, teamId: homeId } = fallback;
 
       const matchDate = new Date(group.match_date).toISOString().split('T')[0];
       const ev = events.find(e => e.date.startsWith(matchDate) || e.date.startsWith(new Date(new Date(matchDate).getTime() - 86400000).toISOString().split('T')[0]));
-      if (!ev || !(ev.competitions[0].status.type.name.includes('FINAL') || ev.competitions[0].status.type.name.includes('FULL'))) {
+      if (!ev) {
+        console.log(`[resolve] SKIP no ESPN event matched date ${matchDate} — ${label}. Team's ESPN dates seen: ${events.slice(0, 5).map(e => e.date).join(', ')}`);
+        await sleep(150);
+        continue;
+      }
+      if (!(ev.competitions[0].status.type.name.includes('FINAL') || ev.competitions[0].status.type.name.includes('FULL'))) {
+        console.log(`[resolve] SKIP matched ESPN event but status is "${ev.competitions[0].status.type.name}" (not finished) — ${label}`);
         await sleep(150);
         continue;
       }
@@ -2635,8 +2631,9 @@ const resolveLiveSiteResults = async () => {
       let hScore, aScore;
       if (c1.id === homeId) { hScore = getScore(c1); aScore = getScore(c2); }
       else { aScore = getScore(c1); hScore = getScore(c2); }
-      if (isNaN(hScore) || isNaN(aScore)) { await sleep(150); continue; }
+      if (isNaN(hScore) || isNaN(aScore)) { console.log(`[resolve] SKIP score was NaN — ${label}`); await sleep(150); continue; }
 
+      console.log(`[resolve] MATCHED final score ${hScore}-${aScore} — ${label}`);
       for (const pick of group.picks) {
         const status = computePickStatus(pick, group.home_team, group.away_team, hScore, aScore);
         if (status === 'WON' || status === 'LOST') {
@@ -2646,11 +2643,14 @@ const resolveLiveSiteResults = async () => {
             body: JSON.stringify({ id: pick.id, status, actual_home: hScore, actual_away: aScore })
           });
           resolvedCount++;
+        } else {
+          console.log(`[resolve] pick market "${pick.market}" (${pick.display}) resolved to status "${status}" — not counted as WON/LOST`);
         }
       }
       await sleep(200);
     }
 
+    console.log(`[resolve] DONE — resolved ${resolvedCount} pick(s) across ${matchKeys.length} match(es) checked.`);
     alert(`Resolved ${resolvedCount} pick(s) across ${matchKeys.length} match(es) checked on the live site.`);
   } catch (e) {
     alert(`Resolve failed: ${e.message}`);
