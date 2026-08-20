@@ -103,10 +103,13 @@ def _load_league_fixtures(slug, league_name):
 def _load_live_scores():
     # Fetched in parallel -- MAJOR_LEAGUES covers 21 leagues now (matching
     # the predictions' own league coverage), and doing that serially would
-    # make a cold-cache page load noticeably slow (worst case ~21x a single
-    # request instead of ~1x).
+    # make a cold-cache page load noticeably slow. Capped at 6 concurrent
+    # requests rather than one thread per league (21) -- Render's free tier
+    # is resource-constrained (shared CPU, 512MB RAM), and firing off 21
+    # simultaneous outbound HTTPS/SSL connections risked stalling the whole
+    # instance rather than actually speeding things up.
     fixtures = []
-    with ThreadPoolExecutor(max_workers=len(MAJOR_LEAGUES)) as pool:
+    with ThreadPoolExecutor(max_workers=6) as pool:
         for result in pool.map(lambda pair: _load_league_fixtures(*pair), MAJOR_LEAGUES):
             fixtures.extend(result)
 
