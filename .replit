@@ -1,0 +1,6 @@
+entrypoint = "saas/app.py"
+run = "cd saas && uvicorn app:app --host 0.0.0.0 --port 5000"
+
+[deployment]
+build = "pip install -r saas/requirements.txt"
+run = "cd saas && uvicorn app:app --host 0.0.0.0 --port $PORT"

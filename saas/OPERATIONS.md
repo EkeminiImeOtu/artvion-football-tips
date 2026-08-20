@@ -124,6 +124,31 @@ of inactivity, so the first visitor after a quiet stretch waits through a
 cold start (tens of seconds) before the page loads. Everyone after that is
 fast until it goes idle again.
 
+## Deploying to Replit (alternative permanent home)
+
+The repository root includes `.replit`, so Replit can start the public
+FastAPI site without needing the Render blueprint. The root-level scanner
+remains private and is not started by Replit.
+
+1. Push this project to a private GitHub repository, then import that
+   repository into Replit. Do not upload `saas/.env`, database files, logs,
+   or the personal scanner's API key.
+2. Add a Replit production PostgreSQL database. Replit supplies its
+   connection string as `DATABASE_URL`; the app already reads that exact
+   environment variable.
+3. In Replit Publishing, add production secrets: `ADMIN_TOKEN`,
+   `PUBLIC_BASE_URL`, `FREE_DAILY_LIMIT`, `SELAR_LINK`, `WHATSAPP_LINK`, and
+   `ADMIN_CORS_ORIGINS`. Add Stripe secrets only when Stripe billing is
+   enabled.
+4. Publish the app as an Autoscale Deployment. Replit uses the deployment
+   command in `.replit` and assigns a public Replit URL.
+5. Set `PUBLIC_BASE_URL` to that published URL and set
+   `ADMIN_CORS_ORIGINS` to a comma-separated list containing
+   `http://localhost:8888` and the public URL. Publish again after changing
+   production secrets.
+6. Test signup, login, free-preview locking, and a publish from the private
+   scanner before sharing the URL. A custom domain can be attached later.
+
 ## What's dormant, not deleted
 
 Signup, login, and accounts are live and linked from navigation --
