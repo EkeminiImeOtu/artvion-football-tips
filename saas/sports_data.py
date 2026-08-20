@@ -148,14 +148,19 @@ CACHE_TTL_STANDINGS = 900  # tables move much slower than live scores
 def _load_standings(slug):
     # NOTE: must be /apis/v2/ here, not /apis/site/v2/ (which returns an
     # empty {} for soccer standings specifically).
+    url = f'https://site.api.espn.com/apis/v2/sports/soccer/{slug}/standings'
     try:
-        data = json.loads(_fetch(f'https://site.api.espn.com/apis/v2/sports/soccer/{slug}/standings'))
-    except Exception:
+        data = json.loads(_fetch(url))
+    except Exception as e:
+        print(f"[standings] FETCH FAILED for {slug} ({url}): {type(e).__name__}: {e}")
         return []
     children = data.get('children') or []
     if not children:
+        print(f"[standings] no 'children' in response for {slug}. Top-level keys: {list(data.keys())}")
         return []
     entries = children[0].get('standings', {}).get('entries', [])
+    if not entries:
+        print(f"[standings] 'children' present but no entries for {slug}. children[0] keys: {list(children[0].keys())}")
     rows = []
     for i, entry in enumerate(entries):
         team = entry.get('team', {}) or {}
@@ -164,6 +169,8 @@ def _load_standings(slug):
             name = (s.get('name') or s.get('abbreviation') or '').lower()
             if name:
                 stat_map[name] = s.get('displayValue', s.get('value'))
+        if i == 0:
+            print(f"[standings] {slug} first entry stat_map keys: {list(stat_map.keys())}")
 
         def pick(*names, default='-'):
             for n in names:
