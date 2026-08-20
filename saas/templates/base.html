@@ -16,7 +16,15 @@
       <a href="/news">News</a>
       <a href="/predictions">Predictions</a>
       <a href="/track-record">Track Record</a>
-      <a href="/unlock" class="btn" style="padding:0.5rem 1.1rem;font-size:0.85rem;">🔓 Unlock</a>
+      {% if user %}
+        <a href="/pricing">Account</a>
+        <form method="post" action="/logout" style="display:inline;">
+          <button type="submit" class="btn" style="padding:0.5rem 1.1rem;font-size:0.85rem;">Log Out</button>
+        </form>
+      {% else %}
+        <a href="/login">Log In</a>
+        <a href="/signup" class="btn" style="padding:0.5rem 1.1rem;font-size:0.85rem;">Sign Up</a>
+      {% endif %}
     </div>
   </nav>
   <main>

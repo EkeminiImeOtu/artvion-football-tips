@@ -12,8 +12,6 @@ Requires env vars for billing to work: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
 STRIPE_PRICE_ID. See .env.example. ADMIN_TOKEN protects the publish/resolve
 endpoints -- set it to something random before exposing this publicly.
 """
-import hashlib
-import hmac
 import os
 import secrets
 from datetime import datetime, date, timedelta, timezone
@@ -40,19 +38,15 @@ FREE_DAILY_LIMIT = int(os.environ.get('FREE_DAILY_LIMIT', '3'))
 ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN')  # required to publish/resolve picks
 SESSION_COOKIE = 'session'
 
-# Manual, no-accounts paywall: pay via Selar -> message WhatsApp -> get a
-# shared passcode -> it unlocks full predictions on this device for
-# UNLOCK_TTL_DAYS. The cookie itself never contains the passcode -- it's an
-# HMAC-signed expiry, so it can't be forged without knowing ADMIN_TOKEN
-# (reused as the signing key rather than adding yet another secret to manage).
-# The real, inherent limit of a *shared* passcode (as opposed to per-user
-# accounts) is that anyone who has it can pass it around -- that trade-off
-# was chosen deliberately for simplicity over building real accounts back out.
-VIP_PASSCODE = os.environ.get('VIP_PASSCODE')
+# Real per-account paywall: user signs up (email + password) -> pays via
+# Selar -> messages WhatsApp with the email they signed up with -> admin
+# confirms the payment and activates that specific account (see
+# /api/admin/activate-subscriber) by writing a row into `subscriptions`.
+# Access is checked per-account via is_active_subscriber, not a shared
+# secret, so there's nothing to pass around to unlock someone else's access.
 WHATSAPP_LINK = os.environ.get('WHATSAPP_LINK', '')
 SELAR_LINK = os.environ.get('SELAR_LINK', '')
-UNLOCK_COOKIE = 'vip_access'
-UNLOCK_TTL_DAYS = 35
+SUBSCRIPTION_DAYS = 30  # matches Selar's monthly billing cycle
 # Origins allowed to call /api/admin/* from a browser (the existing scanner
 # runs on its own origin/port). The bearer token is the real security
 # boundary here, not CORS -- this just lets the browser make the call at all.
@@ -76,8 +70,6 @@ def _startup():
         print("WARNING: ADMIN_TOKEN is not set -- publish/resolve endpoints are disabled until it is.")
     if not billing.billing_configured():
         print("NOTE: Stripe is not configured (STRIPE_SECRET_KEY / STRIPE_PRICE_ID) -- checkout will error until it is.")
-    if not VIP_PASSCODE:
-        print("NOTE: VIP_PASSCODE is not set -- the /unlock paywall will reject every code until it is.")
 
 
 # ---------- auth helpers ----------
@@ -85,28 +77,6 @@ def _startup():
 def current_user(request: Request):
     token = request.cookies.get(SESSION_COOKIE)
     return auth.get_user_from_session(token)
-
-
-def _make_unlock_cookie():
-    expiry = str(int((datetime.now(timezone.utc) + timedelta(days=UNLOCK_TTL_DAYS)).timestamp()))
-    sig = hmac.new((ADMIN_TOKEN or '').encode(), expiry.encode(), hashlib.sha256).hexdigest()
-    return f"{expiry}.{sig}"
-
-
-def _verify_unlock_cookie(value):
-    if not value or not ADMIN_TOKEN:
-        return False
-    try:
-        expiry_str, sig = value.split('.', 1)
-    except ValueError:
-        return False
-    expected_sig = hmac.new(ADMIN_TOKEN.encode(), expiry_str.encode(), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(sig, expected_sig):
-        return False
-    try:
-        return int(expiry_str) > int(datetime.now(timezone.utc).timestamp())
-    except ValueError:
-        return False
 
 
 def require_same_origin(request: Request):
@@ -146,6 +116,7 @@ def landing(request: Request):
 def pricing(request: Request):
     return templates.TemplateResponse(request, 'pricing.html', {
         'user': current_user(request), 'free_limit': FREE_DAILY_LIMIT,
+        'whatsapp_link': WHATSAPP_LINK, 'selar_link': SELAR_LINK,
     })
 
 
@@ -242,32 +213,28 @@ def _fetch_latest_picks():
 
 @app.get('/predictions', response_class=HTMLResponse)
 def predictions_page(request: Request):
+    user = current_user(request)
+    subscribed = False
+    if user:
+        conn = get_db()
+        try:
+            subscribed = is_active_subscriber(conn, user['id'])
+        finally:
+            conn.close()
     scan_date, picks = _fetch_latest_picks()
-    unlocked = _verify_unlock_cookie(request.cookies.get(UNLOCK_COOKIE))
-    visible = picks if unlocked else picks[:FREE_DAILY_LIMIT]
-    locked_count = 0 if unlocked else max(0, len(picks) - FREE_DAILY_LIMIT)
+    visible = picks if subscribed else picks[:FREE_DAILY_LIMIT]
+    locked_count = 0 if subscribed else max(0, len(picks) - FREE_DAILY_LIMIT)
     return templates.TemplateResponse(request, 'predictions.html', {
-        'scan_date': scan_date, 'picks': visible, 'is_unlocked': unlocked, 'locked_count': locked_count,
+        'user': user, 'scan_date': scan_date, 'picks': visible, 'is_unlocked': subscribed, 'locked_count': locked_count,
         'whatsapp_link': WHATSAPP_LINK, 'selar_link': SELAR_LINK,
     })
 
 
-@app.get('/unlock', response_class=HTMLResponse)
-def unlock_form(request: Request, error: str = None):
-    already_unlocked = _verify_unlock_cookie(request.cookies.get(UNLOCK_COOKIE))
-    return templates.TemplateResponse(request, 'unlock.html', {
-        'error': error, 'already_unlocked': already_unlocked,
-        'whatsapp_link': WHATSAPP_LINK, 'selar_link': SELAR_LINK,
-    })
-
-
-@app.post('/unlock')
-def unlock_submit(request: Request, passcode: str = Form(...)):
-    if not VIP_PASSCODE or not secrets.compare_digest(passcode.strip(), VIP_PASSCODE):
-        return RedirectResponse(url='/unlock?error=1', status_code=303)
-    resp = RedirectResponse(url='/predictions', status_code=303)
-    resp.set_cookie(UNLOCK_COOKIE, _make_unlock_cookie(), httponly=True, samesite='lax', max_age=UNLOCK_TTL_DAYS * 86400)
-    return resp
+# Old shared-passcode entry point -- kept as a redirect so any link already
+# shared (WhatsApp messages, the campaign post) doesn't just 404.
+@app.get('/unlock')
+def unlock_redirect():
+    return RedirectResponse(url='/pricing', status_code=307)
 
 
 @app.get('/live-scores', response_class=HTMLResponse)
@@ -287,54 +254,22 @@ def live_scores_page(request: Request):
         matched = picks_by_fixture.get((f['home_name'], f['away_name']))
         if matched:
             f['predictions'] = matched
-    return templates.TemplateResponse(request, 'live_scores.html', {'fixtures': fixtures})
+    return templates.TemplateResponse(request, 'live_scores.html', {'user': current_user(request), 'fixtures': fixtures})
 
 
 @app.get('/news', response_class=HTMLResponse)
 def news_page(request: Request):
     articles = sports_data.get_news(20)
-    return templates.TemplateResponse(request, 'news.html', {'articles': articles})
+    return templates.TemplateResponse(request, 'news.html', {'user': current_user(request), 'articles': articles})
 
 
-# ---------- dashboard: dormant for now (kept for when accounts/billing come back) ----------
+# ---------- dashboard: now just an alias for /predictions, which already
+# does the same is_active_subscriber-gated logic for logged-in users. Kept
+# as a redirect so old links (e.g. signup/login's default `next`) still work.
 
 @app.get('/dashboard', response_class=HTMLResponse)
-def dashboard(request: Request, checkout: str = None):
-    user = current_user(request)
-    if not user:
-        return RedirectResponse(url='/login?next=/dashboard', status_code=303)
-
-    conn = get_db()
-    try:
-        subscribed = is_active_subscriber(conn, user['id'])
-        latest = conn.execute("SELECT MAX(scan_date) AS d FROM predictions").fetchone()
-        scan_date = latest['d'] if latest else None
-        rows = []
-        if scan_date:
-            rows = conn.execute(
-                "SELECT * FROM predictions WHERE scan_date=? AND match_date >= ? ORDER BY match_date ASC",
-                (scan_date, date.today().isoformat())
-            ).fetchall()
-    finally:
-        conn.close()
-
-    rows = sorted(rows, key=lambda r: _confidence_sort_key(r['confidence']))
-    visible = rows if subscribed else rows[:FREE_DAILY_LIMIT]
-    locked_count = 0 if subscribed else max(0, len(rows) - FREE_DAILY_LIMIT)
-
-    picks = []
-    for r in visible:
-        try:
-            match_date_fmt = datetime.fromisoformat(r['match_date'].replace('Z', '+00:00')).strftime('%a %d %b')
-        except Exception:
-            match_date_fmt = r['match_date']
-        picks.append({**dict(r), 'match_date_fmt': match_date_fmt})
-
-    return templates.TemplateResponse(request, 'dashboard.html', {
-        'user': user, 'picks': picks, 'is_subscribed': subscribed,
-        'locked_count': locked_count, 'free_limit': FREE_DAILY_LIMIT, 'scan_date': scan_date,
-        'checkout_success': checkout == 'success',
-    })
+def dashboard():
+    return RedirectResponse(url='/predictions', status_code=307)
 
 
 # ---------- billing ----------
@@ -495,6 +430,35 @@ async def admin_publish(request: Request, _: None = Depends(require_admin)):
     finally:
         conn.close()
     return {'ok': True, 'processed': len(rows), 'scan_date': scan_date}
+
+
+@app.post('/api/admin/activate-subscriber')
+async def admin_activate_subscriber(request: Request, _: None = Depends(require_admin)):
+    """Run this after manually confirming a Selar payment over WhatsApp.
+    Activates the account matching the given email for `days` (default
+    SUBSCRIPTION_DAYS, matching Selar's monthly billing). The user must
+    already have a signed-up account -- if they paid before signing up,
+    ask them to sign up first, then re-run this."""
+    body = await request.json()
+    email = (body.get('email') or '').strip().lower()
+    days = int(body.get('days') or SUBSCRIPTION_DAYS)
+    if not email:
+        raise HTTPException(status_code=400, detail="email is required.")
+    conn = get_db()
+    try:
+        user = conn.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail=f"No account found for {email}. Ask them to sign up first, then re-run this.")
+        period_end = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
+        conn.execute(
+            "INSERT INTO subscriptions (user_id, status, current_period_end, updated_at) VALUES (?, 'active', ?, ?) "
+            "ON CONFLICT(user_id) DO UPDATE SET status='active', current_period_end=?, updated_at=?",
+            (user['id'], period_end, now_iso(), period_end, now_iso())
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {'ok': True, 'email': email, 'active_until': period_end}
 
 
 @app.get('/api/admin/pending')

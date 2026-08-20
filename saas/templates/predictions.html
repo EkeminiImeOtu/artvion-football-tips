@@ -55,7 +55,11 @@
     </div>
     <div class="locked-teaser">
       <p style="margin-bottom:1rem;">{{ locked_count }} more prediction{{ '' if locked_count == 1 else 's' }} available with monthly access.</p>
-      <a href="/unlock" class="btn">Unlock Full Access</a>
+      {% if user %}
+        <a href="/pricing" class="btn">Activate Full Access</a>
+      {% else %}
+        <a href="/signup?next=/predictions" class="btn">Sign Up for Full Access</a>
+      {% endif %}
     </div>
   {% endif %}
 {% endblock %}

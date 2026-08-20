@@ -36,8 +36,8 @@ tunnel, the live link changes and you'd need to share the new one.
 This is a **weekly** product, not daily: publish once on Sunday night,
 covering the coming Monday-through-Sunday week. The site's copy ("This
 week's predictions", "updated every Sunday night") assumes this cadence --
-if that ever changes, the wording in predictions.html/dashboard.html/
-landing.html/pricing.html needs to change with it.
+if that ever changes, the wording in predictions.html/landing.html/
+pricing.html needs to change with it.
 
 The public site never talks to the Odds API or ESPN itself -- it only shows
 what's been published to it. Each Sunday night:
@@ -59,6 +59,24 @@ before publishing the new week: same panel, **🔄 Resolve Live Site Results**
 logic as the personal tool's own local resolve flow. Worth running this
 before Sunday's publish so the Track Record page stays current.
 
+## Activating a paying subscriber
+
+Real accounts, not a shared passcode -- a customer signs up on the site
+themselves (`/signup`), then pays and gets activated manually:
+
+1. Customer pays ₦5,000 on Selar, gets redirected to WhatsApp with a
+   pre-filled message. They need to include the **email they signed up
+   with on the site** (not just their payment email -- these can differ).
+2. Confirm the payment actually landed in your Selar dashboard.
+3. In the personal scanner's admin panel, enter that email into
+   **✅ Activate Subscriber** (optionally set a custom number of days --
+   defaults to 30, matching Selar's monthly billing) and click it.
+4. This calls `/api/admin/activate-subscriber`, which requires the email to
+   already have an account (if they paid before signing up, ask them to
+   sign up first, then re-run this). It writes an active `subscriptions`
+   row for that user, and their access shows up next time they load
+   `/predictions` -- no code to enter, it's tied to their login.
+
 ## Config that matters (`saas/.env`)
 
 - `DATABASE_URL` -- a Postgres connection string. Required; the app won't
@@ -71,8 +89,8 @@ before Sunday's publish so the Track Record page stays current.
 - `PUBLIC_BASE_URL` -- currently `http://localhost:8000`. Only matters for
   Stripe redirects and a CSRF origin check, neither of which are active
   right now (no accounts, no payments -- see below).
-- `FREE_DAILY_LIMIT` -- unused right now since there's no paywall, but
-  still read by the dormant `/dashboard` route if you turn accounts back on.
+- `FREE_DAILY_LIMIT` -- how many free-preview predictions `/predictions`
+  shows before the rest are locked behind an active subscription.
 
 ## Deploying to Render (the permanent, always-on home)
 
@@ -108,12 +126,15 @@ fast until it goes idle again.
 
 ## What's dormant, not deleted
 
-Signup, login, pricing, and Stripe billing code all still exist
-(`/signup`, `/login`, `/pricing`, `/billing/*`) -- they work, they're just
-not linked from navigation, per the decision to run this free with no
-accounts for now. If you want to turn on subscriptions later, that code is
-already there; it needs a real Stripe account and payout method sorted out
-first (see conversation history for the Nigeria/Stripe payout discussion).
+Signup, login, and accounts are live and linked from navigation --
+`/predictions` gates on a real per-account `subscriptions` row now, not a
+shared passcode (that was the old approach; it's been fully retired since
+there's no way to tell paying customers apart from anyone they shared the
+code with). Only the Stripe billing code (`/billing/*`) is still dormant --
+it needs a real Stripe account and payout method sorted out first (see
+conversation history for the Nigeria/Stripe payout discussion). Until then,
+activation stays manual: Selar payment -> WhatsApp confirmation -> admin
+runs **✅ Activate Subscriber** (see above).
 
 ## Known limitations, said plainly
 

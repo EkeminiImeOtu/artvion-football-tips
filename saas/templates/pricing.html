@@ -2,22 +2,35 @@
 {% block title %}Pricing — Artvion Football Tips{% endblock %}
 {% block content %}
   <h1>Simple pricing.</h1>
-  <p class="lede">One plan. Cancel anytime from your dashboard — no phone calls, no retention maze.</p>
+  <p class="lede">One plan, ₦5,000/month. Manual activation, no card stored anywhere on our side.</p>
 
   <div class="pricing-card">
-    <div class="price">$4.99<span>/month</span></div>
+    <div class="price">₦5,000<span>/month</span></div>
     <ul>
       <li>Full weekly predictions, updated every Sunday</li>
       <li>Every market we cover, every league</li>
       <li>Full accuracy history and breakdowns</li>
-      <li>Cancel anytime</li>
+      <li>Live scores linked to what we predicted</li>
     </ul>
+
     {% if user %}
-      <form method="post" action="/billing/checkout">
-        <button type="submit" class="btn" style="width:100%;">Subscribe</button>
-      </form>
+      <p style="margin:1rem 0;color:var(--muted);font-size:0.9rem;">
+        Logged in as <strong>{{ user.email }}</strong>. Follow the 3 steps below to activate this account.
+      </p>
+      <ol style="margin:0 0 1rem 1.2rem;line-height:1.7;">
+        <li>Pay ₦5,000 on Selar: <a href="{{ selar_link }}" target="_blank" rel="noopener">{{ selar_link }}</a></li>
+        <li>
+          Message us on WhatsApp with your payment confirmation and the email above
+          (<strong>{{ user.email }}</strong>):
+          <a href="{{ whatsapp_link }}" target="_blank" rel="noopener">Open WhatsApp</a>
+        </li>
+        <li>We confirm your payment and activate this account — usually within minutes.</li>
+      </ol>
+      <p style="color:var(--muted);font-size:0.85rem;">
+        Once activated, just refresh <a href="/predictions">the predictions page</a> — no code to enter, it's tied to your login.
+      </p>
     {% else %}
-      <a href="/signup?next=/pricing" class="btn" style="width:100%;text-align:center;display:block;">Sign up to subscribe</a>
+      <a href="/signup?next=/pricing" class="btn" style="width:100%;text-align:center;display:block;">Sign up to get started</a>
     {% endif %}
   </div>
 

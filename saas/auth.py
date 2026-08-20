@@ -61,10 +61,16 @@ def _hash_token(token):
 
 
 def create_session(user_id):
+    """Enforces one active session per account: logging in anywhere new
+    invalidates every other session for this user, so sharing an email +
+    password only ever gives one person access at a time -- the most
+    recent login wins, and whoever got logged out has to sign back in
+    (and, in doing so, would kick the other person out again)."""
     token = secrets.token_urlsafe(32)
     expires_at = (datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).isoformat()
     conn = get_db()
     try:
+        conn.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
         conn.execute(
             "INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?,?,?,?)",
             (_hash_token(token), user_id, now_iso(), expires_at)

@@ -1000,6 +1000,12 @@
           <button id="btn-publish-saas" class="btn-secondary">🚀 Publish This Week's Picks</button>
           <button id="btn-resolve-live-site" class="btn-secondary">🔄 Resolve Live Site Results</button>
         </div>
+        <div class="admin-publish-row">
+          <input type="email" id="saas-activate-email" placeholder="Subscriber's account email (after confirming Selar payment on WhatsApp)">
+          <input type="number" id="saas-activate-days" placeholder="Days (default 30)" style="max-width: 140px;">
+          <button id="btn-activate-subscriber" class="btn-secondary">✅ Activate Subscriber</button>
+        </div>
+        <div id="activate-subscriber-output" class="admin-publish-note" style="white-space: pre-wrap;"></div>
       </div>
     </details>
 
@@ -2661,6 +2667,35 @@ const resolveLiveSiteResults = async () => {
 };
 
 if (qs('#btn-resolve-live-site')) qs('#btn-resolve-live-site').addEventListener('click', resolveLiveSiteResults);
+
+// Run this after confirming a Selar payment over WhatsApp: activates the
+// subscriber's account (they must have already signed up on the site) for
+// the given number of days, matching Selar's monthly billing by default.
+const activateSubscriber = async () => {
+  const apiUrl = (qs('#saas-api-url')?.value || '').trim().replace(/\/$/, '');
+  const adminToken = qs('#saas-admin-token')?.value || '';
+  const email = (qs('#saas-activate-email')?.value || '').trim();
+  const daysInput = qs('#saas-activate-days')?.value;
+  const days = daysInput ? parseInt(daysInput, 10) : undefined;
+  const out = qs('#activate-subscriber-output');
+  if (!apiUrl || !adminToken) { alert('Enter the Artvion Football Tips API URL and admin token first.'); return; }
+  if (!email) { alert("Enter the subscriber's account email first."); return; }
+  out.textContent = 'Activating...';
+  try {
+    const res = await fetch(`${apiUrl}/api/admin/activate-subscriber`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+      body: JSON.stringify(days ? { email, days } : { email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+    out.textContent = `Activated ${data.email} until ${data.active_until}`;
+    qs('#saas-activate-email').value = '';
+  } catch (e) {
+    out.textContent = `Failed: ${e.message}`;
+  }
+};
+if (qs('#btn-activate-subscriber')) qs('#btn-activate-subscriber').addEventListener('click', activateSubscriber);
 
 qs('#tab-scanner').addEventListener('click', () => switchView('scanner'));
 qs('#tab-trackrecord').addEventListener('click', () => switchView('trackrecord'));
