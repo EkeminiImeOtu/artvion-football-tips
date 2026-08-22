@@ -1,31 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Artvion Football Tips — Probability Analytics{% endblock %}
 {% block content %}
-  <h1>Football predictions with a real, published track record.</h1>
-  <p class="lede">
-    Live scores, football news, and a calibrated probability model — backtested against 5 seasons
-    of real results across 21 leagues, and honest about what it does and doesn't know. No ads.
-  </p>
-  <a href="/predictions" class="btn">See this week's predictions</a>
-  <a href="/track-record" class="btn-secondary" style="margin-left:0.7rem;">See the real accuracy record</a>
+  <section class="public-hero">
+    <div class="hero-copy">
+      <div class="live-kicker">PUBLIC TRACK RECORD</div>
+      <h1>Football predictions that show their receipts.</h1>
+      <p class="lede">Every pick is logged before the result, then graded against the real final score — win or lose, published either way. That's the whole pitch: not a promise, a public ledger.</p>
+      <div class="hero-actions"><a href="/track-record" class="btn">See the real numbers</a><a href="/predictions" class="btn-secondary">This week's predictions</a></div>
+    </div>
+    <div class="hero-stats">
+      <div><strong>{{ overall.total }}</strong><span>predictions logged</span></div>
+      <div><strong>{{ overall.resolved }}</strong><span>graded so far</span></div>
+      <div><strong>{{ overall.win_rate_str }}</strong><span>win rate, resolved picks</span></div>
+    </div>
+  </section>
 
   <div class="teaser-row">
-    <div class="teaser-card">
-      <h3>⚽ Live Scores <a href="/live-scores">See all →</a></h3>
-      {% if fixtures %}
-        {% for f in fixtures %}
-          <div class="teaser-mini-score">
-            <span>{{ f.home_name }} vs {{ f.away_name }}</span>
-            <span>
-              {% if f.is_live or f.is_final %}{{ f.home_score }}-{{ f.away_score }}{% else %}{{ f.detail }}{% endif %}
-            </span>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p style="color:var(--muted);font-size:0.85rem;">No fixtures right now.</p>
-      {% endif %}
-    </div>
-
     <div class="teaser-card">
       <h3>📰 Latest News <a href="/news">See all →</a></h3>
       {% if news %}
@@ -40,7 +30,7 @@
       {% endif %}
     </div>
 
-    <div class="teaser-card">
+    <div class="teaser-card picks-teaser">
       <h3>🎯 This Week's Top Picks <a href="/predictions">See all →</a></h3>
       {% if picks %}
         {% for p in picks %}

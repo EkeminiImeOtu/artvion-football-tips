@@ -105,11 +105,16 @@ def require_admin(authorization: str = Header(default=None)):
 
 @app.get('/', response_class=HTMLResponse)
 def landing(request: Request):
-    fixtures = sports_data.get_live_scores()[:5]
     news = sports_data.get_news(4)
     _, picks = _fetch_latest_picks()
+    conn = get_db()
+    try:
+        rows = conn.execute("SELECT status FROM predictions").fetchall()
+    finally:
+        conn.close()
+    overall = _overall_track_record(rows)
     return templates.TemplateResponse(request, 'landing.html', {
-        'user': current_user(request), 'fixtures': fixtures, 'news': news, 'picks': picks[:3],
+        'user': current_user(request), 'news': news, 'picks': picks[:3], 'overall': overall,
     })
 
 
@@ -238,43 +243,10 @@ def unlock_redirect():
     return RedirectResponse(url='/pricing', status_code=307)
 
 
-@app.get('/live-scores', response_class=HTMLResponse)
-def live_scores_page(request: Request):
-    fixtures = sports_data.get_live_scores()
-    # Reuse the exact same matching _fetch_latest_picks already computed
-    # (pick -> live fixture) rather than re-deriving it, so both pages
-    # agree with each other about which fixture a prediction belongs to.
-    _, picks = _fetch_latest_picks()
-    picks_by_fixture = {}
-    for p in picks:
-        live = p.get('live')
-        if live:
-            key = (live['home_name'], live['away_name'])
-            picks_by_fixture.setdefault(key, []).append(p)
-    for f in fixtures:
-        matched = picks_by_fixture.get((f['home_name'], f['away_name']))
-        if matched:
-            f['predictions'] = matched
-    return templates.TemplateResponse(request, 'live_scores.html', {'user': current_user(request), 'fixtures': fixtures})
-
-
 @app.get('/news', response_class=HTMLResponse)
 def news_page(request: Request):
     articles = sports_data.get_news(20)
     return templates.TemplateResponse(request, 'news.html', {'user': current_user(request), 'articles': articles})
-
-
-@app.get('/standings', response_class=HTMLResponse)
-def standings_page(request: Request, league: str = None):
-    leagues = sports_data.STANDINGS_LEAGUES
-    valid_slugs = {slug for slug, _ in leagues}
-    active_slug = league if league in valid_slugs else leagues[0][0]
-    active_name = dict(leagues)[active_slug]
-    rows = sports_data.get_standings(active_slug)
-    return templates.TemplateResponse(request, 'standings.html', {
-        'user': current_user(request), 'leagues': leagues,
-        'active_slug': active_slug, 'active_name': active_name, 'rows': rows,
-    })
 
 
 # ---------- dashboard: now just an alias for /predictions, which already
@@ -365,6 +337,16 @@ def _win_rate_str(won, resolved):
     return f"{round(won / resolved * 100, 1)}%"
 
 
+def _overall_track_record(rows):
+    total = len(rows)
+    won = sum(1 for r in rows if r['status'] == 'WON')
+    lost = sum(1 for r in rows if r['status'] == 'LOST')
+    resolved = won + lost
+    pending = total - resolved
+    return {'total': total, 'won': won, 'lost': lost, 'resolved': resolved, 'pending': pending,
+            'win_rate_str': _win_rate_str(won, resolved)}
+
+
 @app.get('/track-record', response_class=HTMLResponse)
 def track_record(request: Request):
     conn = get_db()
@@ -373,13 +355,7 @@ def track_record(request: Request):
     finally:
         conn.close()
 
-    total = len(rows)
-    won = sum(1 for r in rows if r['status'] == 'WON')
-    lost = sum(1 for r in rows if r['status'] == 'LOST')
-    resolved = won + lost
-    pending = total - resolved
-    overall = {'total': total, 'won': won, 'lost': lost, 'resolved': resolved, 'pending': pending,
-               'win_rate_str': _win_rate_str(won, resolved)}
+    overall = _overall_track_record(rows)
 
     by_market_map = {}
     for r in rows:
