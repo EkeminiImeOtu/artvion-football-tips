@@ -332,6 +332,17 @@ def generate_picks(m, home_form, away_form):
     if m['over25'] and m['over25'] >= MIN_ODDS and mp['p_over25'] >= PROB_MEDIUM:
         picks.append({'market': 'Over 2.5 Total Goals', 'conf': prob_conf(mp['p_over25']), 'odds': m['over25'], 'won': (hg + ag) >= 3})
 
+    # Over 1.5 / Over 3.5 Total Goals -- computed the whole time (p_over15,
+    # p_over35) but never actually turned into simulated picks until now, so
+    # neither has ever been backtested despite being live in the app. No real
+    # odds column for either (football-data.co.uk only prices Over/Under 2.5),
+    # same as the live app estimating Over 1.5 odds rather than pricing it
+    # directly -- so these are probability-bar-only, like BTTS/Team Over 1.5.
+    if mp['p_over15'] >= PROB_MEDIUM:
+        picks.append({'market': 'Over 1.5 Total Goals', 'conf': prob_conf(mp['p_over15']), 'odds': None, 'won': (hg + ag) >= 2})
+    if mp['p_over35'] >= PROB_MEDIUM:
+        picks.append({'market': 'Over 3.5 Total Goals', 'conf': prob_conf(mp['p_over35']), 'odds': None, 'won': (hg + ag) >= 4})
+
     # Both Teams to Score (no odds column available -- probability bar only)
     if mp['p_btts'] >= PROB_MEDIUM:
         picks.append({'market': 'Both Teams to Score', 'conf': prob_conf(mp['p_btts']), 'odds': None, 'won': hg >= 1 and ag >= 1})

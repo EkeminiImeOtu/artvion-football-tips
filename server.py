@@ -59,6 +59,11 @@ def init_db():
             UNIQUE(match_date, home_team, away_team, market, display)
         )
     ''')
+    # Added later than the original schema -- existing databases won't have
+    # this column yet, so add it if missing rather than assuming a fresh DB.
+    existing_cols = {row['name'] for row in conn.execute("PRAGMA table_info(predictions)")}
+    if 'confidence_pct' not in existing_cols:
+        conn.execute("ALTER TABLE predictions ADD COLUMN confidence_pct INTEGER")
     conn.commit()
     conn.close()
 
@@ -81,12 +86,12 @@ def upsert_pick(conn, row):
         conn.execute('''
             INSERT INTO predictions
             (match_date, scan_logged_at, league, home_team, away_team, market, display,
-             confidence, odds, bet_type, espn_slug, home_espn_id, away_espn_id,
+             confidence, confidence_pct, odds, bet_type, espn_slug, home_espn_id, away_espn_id,
              status, actual_home, actual_away, resolved_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ''', (
             row['match_date'], now_iso(), row.get('league'), row['home_team'], row['away_team'],
-            row['market'], row['display'], row.get('confidence'), row.get('odds'), row.get('bet_type'),
+            row['market'], row['display'], row.get('confidence'), row.get('confidence_pct'), row.get('odds'), row.get('bet_type'),
             row.get('espn_slug'), row.get('home_espn_id'), row.get('away_espn_id'),
             row.get('status', 'PENDING'), row.get('actual_home'), row.get('actual_away'),
             now_iso() if row.get('status') in RESOLVED_STATUSES else None
@@ -192,6 +197,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                             'market': p.get('market'),
                             'display': p.get('display'),
                             'confidence': p.get('conf'),
+                            'confidence_pct': p.get('probPct'),
                             'odds': p.get('odds'),
                             'bet_type': p.get('betType'),
                             'status': p.get('status') or 'PENDING',

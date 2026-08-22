@@ -6,21 +6,25 @@
   <title>SportyBet Football Scout</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #070d1a;
-      --surface: #0c1526;
-      --card: #0f1d33;
-      --border: #1a2e4a;
-      --green: #00e676;
-      --green2: #00bfa5;
-      --red: #ff5252;
-      --yellow: #ffd740;
-      --orange: #ff9100;
-      --blue: #448aff;
-      --text: #e3eeff;
-      --muted: #5a7a9f;
+      /* Floodlit-night-pitch palette: a solo scouting terminal, not a
+         marketing page -- warm amber (floodlight) as the one bold accent
+         instead of another "acid-green on black" AI-default, grounded in
+         the actual subject (a match under stadium lights at night). */
+      --bg: #0b1410;
+      --surface: #121e18;
+      --card: #1e3a2c;
+      --border: #2c4a3a;
+      --green: #f2b544;
+      --green2: #d99b2f;
+      --red: #e2543f;
+      --yellow: #e8c76a;
+      --orange: #cc7a3d;
+      --blue: #6fa88f;
+      --text: #eeedeb;
+      --muted: #9ebca9;
     }
 
     * {
@@ -44,7 +48,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background-color: rgba(12, 21, 38, 0.95);
+      background-color: rgba(18, 30, 24, 0.95);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
       padding: 1rem 2rem;
@@ -67,14 +71,16 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       display: inline-block;
-      text-shadow: 0 0 20px rgba(0, 230, 118, 0.3);
+      text-shadow: 0 0 20px rgba(242, 181, 68, 0.3);
     }
 
     .title-group h1 {
-      font-size: 1.25rem;
-      font-weight: 800;
+      font-family: 'Oswald', 'Inter', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-transform: uppercase;
       margin-bottom: 0.2rem;
-      letter-spacing: -0.5px;
+      letter-spacing: 0.02em;
     }
 
     .title-group p {
@@ -222,7 +228,7 @@
 
     .btn-scan:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);
+      box-shadow: 0 4px 15px rgba(242, 181, 68, 0.4);
     }
     
     .btn-scan:disabled {
@@ -272,8 +278,9 @@
     }
 
     .stat-value {
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 1.8rem;
-      font-weight: 800;
+      font-weight: 600;
       line-height: 1;
     }
 
@@ -412,11 +419,11 @@
     .rejections-details {
       display: none;
       margin-top: 1rem;
-      background: rgba(255, 82, 82, 0.05);
+      background: rgba(226, 84, 63, 0.05);
       border-radius: 8px;
       padding: 1rem;
       font-size: 0.85rem;
-      border: 1px solid rgba(255, 82, 82, 0.3);
+      border: 1px solid rgba(226, 84, 63, 0.3);
     }
     .rejections-details.open {
       display: block;
@@ -577,9 +584,9 @@
       font-size: 0.72rem;
       font-weight: 700;
     }
-    .status-pill.won { background: rgba(0, 230, 118, 0.15); color: var(--green); }
-    .status-pill.lost { background: rgba(255, 82, 82, 0.15); color: var(--red); }
-    .status-pill.pending { background: rgba(90, 122, 159, 0.15); color: var(--muted); }
+    .status-pill.won { background: rgba(242, 181, 68, 0.15); color: var(--green); }
+    .status-pill.lost { background: rgba(226, 84, 63, 0.15); color: var(--red); }
+    .status-pill.pending { background: rgba(148, 171, 157, 0.15); color: var(--muted); }
 
     /* Matches Container */
     .matches-grid {
@@ -689,7 +696,7 @@
     .h2h-odds {
       font-size: 0.85rem;
       color: var(--yellow);
-      background: rgba(255,215,64,0.1);
+      background: rgba(232, 199, 106,0.1);
       padding: 0.2rem 0.5rem;
       border-radius: 4px;
     }
@@ -771,14 +778,38 @@
     
     .pick-pill.single {
       color: var(--orange);
-      background: rgba(255, 145, 0, 0.1);
-      border: 1px solid rgba(255, 145, 0, 0.25);
+      background: rgba(204, 122, 61, 0.1);
+      border: 1px solid rgba(204, 122, 61, 0.25);
     }
     
     .pick-pill.acca {
       color: var(--green);
-      background: rgba(0, 230, 118, 0.15);
-      border: 1px solid rgba(0, 230, 118, 0.3);
+      background: rgba(242, 181, 68, 0.15);
+      border: 1px solid rgba(242, 181, 68, 0.3);
+    }
+
+    /* Floodlight meter -- this tool's one signature device. Confidence
+       shown as ascending lit bars (like a floodlight tower / signal
+       strength), not a flat colored pill. Unlit bars stay dim so the eye
+       reads "how many are lit" at a glance across a whole page of picks. */
+    .floodlight-meter {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      margin-right: 2px;
+    }
+    .fl-bar {
+      width: 4px;
+      border-radius: 1px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+    .fl-bar:nth-child(1) { height: 6px; }
+    .fl-bar:nth-child(2) { height: 9px; }
+    .fl-bar:nth-child(3) { height: 12px; }
+    .fl-bar.lit {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(242, 181, 68, 0.55);
     }
 
     .filter-tabs {
@@ -878,12 +909,17 @@
     .disclaimer {
       max-width: 800px;
       margin: 0 auto;
-      background: rgba(255, 82, 82, 0.1);
-      border: 1px solid rgba(255, 82, 82, 0.2);
+      background: rgba(226, 84, 63, 0.1);
+      border: 1px solid rgba(226, 84, 63, 0.2);
       padding: 1rem;
       border-radius: 8px;
       color: #ff8a80;
     }
+
+    /* Live scores homepage */
+    .live-home { max-width:1280px; margin:0 auto; padding:1.25rem 2rem 3rem; width:100%; }
+    .live-hero { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.35rem 1.5rem; border:1px solid var(--border); border-radius:14px; background:linear-gradient(110deg,#102640,#0d1930 55%,#102f32); margin-bottom:1rem; }.eyebrow { color:var(--green); font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }.live-hero h2 { font-size:1.65rem; letter-spacing:-.04em; margin:.2rem 0; }.live-hero p { color:#9db3ce; font-size:.9rem; }.live-count { display:flex; align-items:center; gap:.55rem; border:1px solid #2b4d62; border-radius:999px; padding:.65rem .9rem; font-size:.82rem; font-weight:700; white-space:nowrap; }.pulse { width:9px; height:9px; border-radius:50%; background:var(--red); box-shadow:0 0 0 0 rgba(226, 84, 63,.7); animation:pulse 1.6s infinite; } @keyframes pulse { 70% { box-shadow:0 0 0 9px rgba(226, 84, 63,0) } 100% { box-shadow:0 0 0 0 rgba(226, 84, 63,0) } }
+    .score-layout { display:grid; grid-template-columns:1.65fr .8fr; gap:1rem; }.score-panel,.side-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }.score-toolbar { padding:1rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.7rem; border-bottom:1px solid var(--border); }.date-nav,.live-filters { display:flex; gap:.4rem; align-items:center; }.date-nav button,.live-filters button { border:1px solid var(--border); background:#091426; color:#a8bcd4; border-radius:7px; padding:.48rem .7rem; font:600 .78rem Inter,sans-serif; cursor:pointer; }.date-nav button.active,.live-filters button.active { background:var(--green); color:#05231b; border-color:var(--green); }.league-block { border-bottom:1px solid var(--border); }.league-head { display:flex; justify-content:space-between; align-items:center; padding:.7rem 1rem; color:#b8cae0; font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:rgba(255,255,255,.025); }.match-row { display:grid; grid-template-columns:52px 1fr 46px 34px; align-items:center; gap:.35rem; padding:.67rem 1rem; border-top:1px solid rgba(44, 74, 58,.7); font-size:.87rem; }.match-row:hover { background:#102038; }.match-minute { color:var(--red); font-size:.72rem; font-weight:800; }.match-minute.soon { color:#85a1be; }.teams { display:grid; gap:.25rem; }.team { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }.team strong { font-weight:600; }.score { font-weight:800; color:#fff; }.fav { border:0; background:transparent; color:#5d7592; cursor:pointer; font-size:1.05rem; }.fav.active { color:var(--yellow); }.side-column { display:flex; flex-direction:column; gap:1rem; }.side-card h3 { padding:1rem 1rem .7rem; font-size:.9rem; }.trend { display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; border-top:1px solid var(--border); }.trend-badge { min-width:34px; height:34px; display:grid; place-items:center; border-radius:9px; background:#153452; color:var(--green); font-weight:800; }.trend small { color:var(--muted); display:block; margin-top:.15rem; }.quick-scan { padding:1rem; background:linear-gradient(145deg,#122946,#0d1829); }.quick-scan p { font-size:.82rem; color:#9db3ce; margin:.35rem 0 .8rem; }.quick-scan button { width:100%; border:0; background:var(--green); color:#06231b; font-weight:800; padding:.65rem; border-radius:8px; cursor:pointer; } @media (max-width:800px) { .live-home { padding:1rem; }.score-layout { grid-template-columns:1fr; }.live-hero { align-items:flex-start; flex-direction:column; }.match-row { grid-template-columns:44px 1fr 35px 26px; padding:.65rem .7rem; } .live-filters { overflow:auto; max-width:100%; } }
   </style>
 </head>
 <body>
@@ -944,7 +980,7 @@
             <label class="checkbox-label"><input type="checkbox" id="m-gg-over-25"> GG & Over 2.5 (weak signal per backtest — off by default)</label>
             <label class="checkbox-label"><input type="checkbox" id="m-over-15" checked> Over 1.5 Goals</label>
             <label class="checkbox-label"><input type="checkbox" id="m-over-25" checked> Over 2.5 Goals</label>
-            <label class="checkbox-label"><input type="checkbox" id="m-over-35" checked> Over 3.5 Goals</label>
+            <label class="checkbox-label"><input type="checkbox" id="m-over-35"> Over 3.5 Goals (weak signal per backtest — off by default)</label>
             <label class="checkbox-label"><input type="checkbox" id="m-team-over-15" checked> Team Over 1.5 Goals</label>
             <label class="checkbox-label"><input type="checkbox" id="m-team-over-25"> Team Over 2.5 Goals (weak signal per backtest — off by default)</label>
             <label class="checkbox-label"><input type="checkbox" id="m-handicap" checked> Handicap</label>
@@ -957,6 +993,7 @@
       <button id="btn-scan" class="btn-scan">
         <span class="btn-text">Scan + Analyse</span>
       </button>
+      <button id="btn-load-saved" class="btn-secondary" style="margin-top:0.6rem;">📂 Load Saved Predictions (no API call — uses the date range above)</button>
     </section>
 
     <section class="stats-row">
@@ -1013,6 +1050,20 @@
       <button class="tab-btn active" data-filter="all">All Recommendations</button>
       <button class="tab-btn" data-filter="single">🎯 Singles Only</button>
       <button class="tab-btn" data-filter="acca">🔗 Accas Only</button>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-conf-filter="all">All Confidence</button>
+      <button class="tab-btn" data-conf-filter="high">🟢 High</button>
+      <button class="tab-btn" data-conf-filter="medium">🟡 Medium</button>
+      <button class="tab-btn" data-conf-filter="low">🔴 Low</button>
+    </div>
+
+    <div class="filter-tabs">
+      <label style="align-self:center;color:var(--muted);font-size:0.85rem;">Prediction option:</label>
+      <select id="market-filter" style="background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.6rem;">
+        <option value="all">All Options</option>
+      </select>
     </div>
 
     <section id="matches-container" class="matches-grid">
@@ -1147,6 +1198,24 @@ const CACHE = {
 let globalMatches = [];
 let isScanning = false;
 let currentBetTypeFilter = 'all';
+let currentConfFilter = 'all';
+let currentMarketFilter = 'all';
+let currentRenderMode = 'scan'; // 'scan' (live globalMatches) or 'saved' (loaded from predictions.db, no API call)
+let savedPredictionRows = [];
+
+// Refills the "Prediction option" dropdown with whatever markets are
+// actually present in the current dataset, keeping the current selection
+// if it's still one of the options (so re-populating after every scan/load
+// doesn't silently reset the user's filter choice).
+const populateMarketFilter = (markets) => {
+  const select = qs('#market-filter');
+  if (!select) return;
+  const distinct = [...new Set(markets)].sort();
+  const previous = select.value;
+  select.innerHTML = `<option value="all">All Options</option>` + distinct.map(m => `<option value="${m}">${m}</option>`).join('');
+  select.value = distinct.includes(previous) ? previous : 'all';
+  currentMarketFilter = select.value;
+};
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const qs = (sel) => document.querySelector(sel);
@@ -1642,6 +1711,15 @@ const analyzeMatch = (match, homeForm, awayForm, filters) => {
     }
   }
 
+  // Over 3.5 Total Goals -- OFF by default. Newly backtested (2026-08-22,
+  // 21 leagues/5 seasons): only 77 picks ever cleared the medium-confidence
+  // gate, winning just 48.1% -- worse than even the model's own "low
+  // confidence" baseline (68.2%) on other markets. Two likely causes: 4+
+  // combined goals is rare enough that a 6-game rolling average can't price
+  // it reliably, and the sample is too thin to trust regardless. Compare to
+  // Over 1.5 Total Goals (kept ON), which backtested at 77.0% on 28,678
+  // picks -- the model handles goal totals well in general, just not this
+  // specific line.
   if (filters.over35) {
     if (over35Odds && over35Odds < minOdds) {
       rejections.push(`Over 3.5: Odds (${over35Odds}) below minimum (${minOdds})`);
@@ -1948,6 +2026,25 @@ const resolveMatchResult = async (match, espnSlug, homeId, awayId) => {
 let trackingAvailable = true;
 let trackingWarned = false;
 
+// Pulls the numeric model probability back out of a pick's reasons (e.g.
+// "Model probability: 73% (market-implied: 61%)") so it can be shown and
+// stored alongside the high/medium/low label, not just the label alone.
+// Picks made via the no-form-data fallback path (Market Heuristics) never
+// have this -- there's no model probability to extract, so they show blank.
+const extractProbPct = (p) => {
+  const match = (p.reasons || []).join(' ').match(/Model probability:\s*(\d+)%/);
+  return match ? parseInt(match[1], 10) : null;
+};
+
+// The floodlight meter: this tool's signature confidence indicator --
+// ascending lit bars instead of a flat colored label, so a whole page of
+// picks reads by "how many bars are lit" rather than parsing text per pick.
+const floodlightMeter = (conf) => {
+  const lit = { low: 1, medium: 2, high: 3 }[conf] || 0;
+  const bars = [1, 2, 3].map(i => `<span class="fl-bar ${i <= lit ? 'lit' : ''}"></span>`).join('');
+  return `<span class="floodlight-meter" title="Confidence: ${conf || 'unknown'}">${bars}</span>`;
+};
+
 const logPicksToServer = async (mObj, espnSlug, homeEspnId, awayEspnId, lg) => {
   if (!trackingAvailable) return;
   try {
@@ -1963,7 +2060,7 @@ const logPicksToServer = async (mObj, espnSlug, homeEspnId, awayEspnId, lg) => {
         actual_home: mObj.actualResult ? mObj.actualResult.home : null,
         actual_away: mObj.actualResult ? mObj.actualResult.away : null,
         picks: mObj.picks.map(p => ({
-          market: p.market, display: p.display, conf: p.conf, odds: p.odds, betType: p.betType, status: p.status
+          market: p.market, display: p.display, conf: p.conf, probPct: extractProbPct(p), odds: p.odds, betType: p.betType, status: p.status
         }))
       }]
     };
@@ -1991,7 +2088,11 @@ const renderMatches = () => {
 
   let html = '';
   globalMatches.forEach((m, idx) => {
-    const filteredPicks = m.picks.filter(p => currentBetTypeFilter === 'all' || p.betType === currentBetTypeFilter);
+    const filteredPicks = m.picks.filter(p =>
+      (currentBetTypeFilter === 'all' || p.betType === currentBetTypeFilter) &&
+      (currentConfFilter === 'all' || p.conf === currentConfFilter) &&
+      (currentMarketFilter === 'all' || p.market === currentMarketFilter)
+    );
     
     if (filteredPicks.length === 0) {
       const hideEmpty = document.getElementById('m-hide-empty')?.checked;
@@ -2024,9 +2125,11 @@ const renderMatches = () => {
       
       const oddsStr = p.odds ? ` @ ${p.odds}` : '';
       const prefix = p.betType === 'single' ? '🎯 Single' : '🔗 Acca';
-      const displayText = `${prefix} | ${p.display}${oddsStr}`;
-      
-      return `<div class="pick-pill ${p.betType}">${displayText} ${badge}</div>`;
+      const prob = extractProbPct(p);
+      const probStr = prob !== null ? ` (${prob}%)` : '';
+      const displayText = `${prefix} | ${p.display}${probStr}${oddsStr}`;
+
+      return `<div class="pick-pill ${p.betType}">${floodlightMeter(p.conf)}${displayText} ${badge}</div>`;
     }).join('');
     
     const analysisHtml = filteredPicks.map(p => `
@@ -2080,6 +2183,96 @@ const renderMatches = () => {
   
   container.innerHTML = html;
   if(qs('#btn-export')) qs('#btn-export').style.display = 'block';
+};
+
+// Loads picks already saved in predictions.db (from a previous scan) --
+// no Odds API call, just reads what's already stored locally. Only the
+// final pick fields are stored (not the original form/odds context), so
+// this renders a simpler card than a live scan's match-card.
+const loadSavedPredictions = async () => {
+  const btn = qs('#btn-load-saved');
+  const dateFrom = qs('#start-date')?.value;
+  const dateTo = qs('#end-date')?.value;
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Loading...';
+  try {
+    const params = new URLSearchParams({ limit: '1000' });
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    const res = await fetch(`/api/predictions?${params.toString()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    savedPredictionRows = await res.json();
+    currentRenderMode = 'saved';
+    populateMarketFilter(savedPredictionRows.map(r => r.market));
+    setStatus(`Loaded ${savedPredictionRows.length} saved pick(s) from predictions.db.`, false);
+    renderSavedView();
+  } catch (e) {
+    alert(`Failed to load saved predictions: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+};
+if (qs('#btn-load-saved')) qs('#btn-load-saved').addEventListener('click', loadSavedPredictions);
+
+const renderSavedView = () => {
+  const container = qs('#matches-container');
+  const filtered = savedPredictionRows.filter(r =>
+    (currentBetTypeFilter === 'all' || r.bet_type === currentBetTypeFilter) &&
+    (currentConfFilter === 'all' || r.confidence === currentConfFilter) &&
+    (currentMarketFilter === 'all' || r.market === currentMarketFilter)
+  );
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><div class="empty-title">No Saved Predictions</div><p>Nothing stored for this date range and filter combination yet.<br>Run a scan first, or widen the date range above.</p></div>`;
+    return;
+  }
+
+  const byMatch = {};
+  filtered.forEach(r => {
+    const key = `${r.match_date}|${r.home_team}|${r.away_team}`;
+    if (!byMatch[key]) byMatch[key] = { home_team: r.home_team, away_team: r.away_team, match_date: r.match_date, league: r.league, picks: [] };
+    byMatch[key].picks.push(r);
+  });
+
+  const html = Object.values(byMatch).map(m => {
+    const date = new Date(m.match_date);
+    const timeStr = isNaN(date) ? m.match_date : (date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + date.toLocaleDateString());
+    const picksHtml = m.picks.map(p => {
+      let badge = '';
+      if (p.status === 'WON') badge = '<span style="background:var(--green);color:#000;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">🎉 WON</span>';
+      else if (p.status === 'LOST') badge = '<span style="background:var(--red);color:#000;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">❌ LOST</span>';
+      else badge = `<span style="background:var(--muted);color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px;font-size:0.7rem;">⏳ ${p.status}</span>`;
+      const oddsStr = p.odds ? ` @ ${p.odds}` : '';
+      const prefix = p.bet_type === 'single' ? '🎯 Single' : '🔗 Acca';
+      // confidence_pct only exists for picks scanned after this feature was added --
+      // older stored picks show the label only, since the percentage was never captured for them.
+      const probStr = (p.confidence_pct !== null && p.confidence_pct !== undefined) ? ` (${p.confidence_pct}%)` : '';
+      return `<div class="pick-pill ${p.bet_type || ''}">${floodlightMeter(p.confidence)}${prefix} | ${p.market}: ${p.display}${probStr}${oddsStr} ${badge}</div>`;
+    }).join('');
+
+    return `
+      <div class="match-card">
+        <div class="match-header">
+          <div class="match-teams"><span>${m.home_team}</span><span class="vs">VS</span><span>${m.away_team}</span></div>
+          <div class="match-meta">
+            <span class="league-badge">⚽ ${m.league || ''}</span>
+            <span>⏰ ${timeStr}</span>
+          </div>
+        </div>
+        <div class="match-body">
+          <div class="picks-container">
+            <div class="picks-title">Saved Picks (${m.picks.length})</div>
+            <div class="picks-row">${picksHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+  if (qs('#btn-export')) qs('#btn-export').style.display = 'none';
 };
 
 const fetchTeamScheduleGlobally = async (teamName) => {
@@ -2278,6 +2471,8 @@ const mainScan = async () => {
     });
 
     setStatus(`Scan complete. Found ${globalMatches.length} matches with recommendations.`, false);
+    currentRenderMode = 'scan';
+    populateMarketFilter(globalMatches.flatMap(m => m.picks.map(p => p.market)));
     renderMatches();
     
   } catch (err) {
@@ -2335,15 +2530,31 @@ const exportCsv = () => {
 
 qs('#btn-scan').addEventListener('click', mainScan);
 if(qs('#btn-export')) qs('#btn-export').addEventListener('click', exportCsv);
-if(qs('#m-hide-empty')) qs('#m-hide-empty').addEventListener('change', renderMatches);
+if(qs('#m-hide-empty')) qs('#m-hide-empty').addEventListener('change', () => rerenderCurrentView());
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
+const rerenderCurrentView = () => currentRenderMode === 'saved' ? renderSavedView() : renderMatches();
+
+document.querySelectorAll('[data-filter]').forEach(btn => {
   btn.addEventListener('click', (e) => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
     e.target.classList.add('active');
     currentBetTypeFilter = e.target.getAttribute('data-filter');
-    renderMatches();
+    rerenderCurrentView();
   });
+});
+
+document.querySelectorAll('[data-conf-filter]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('[data-conf-filter]').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentConfFilter = e.target.getAttribute('data-conf-filter');
+    rerenderCurrentView();
+  });
+});
+
+if (qs('#market-filter')) qs('#market-filter').addEventListener('change', (e) => {
+  currentMarketFilter = e.target.value;
+  rerenderCurrentView();
 });
 
 // ============ Track Record ============
